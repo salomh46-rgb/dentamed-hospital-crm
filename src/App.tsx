@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Language, Doctor, Service, ToothData, Appointment, ClinicId, StaffSession } from './types';
 import { DOCTORS, SERVICES, CLINICS, TENANTS } from './data/mockData';
 import { showTelegramConfirm } from './utils/telegramAlerts';
-import { fetchDoctors, fetchServices, fetchAppointments, loginStaff } from './services/api';
+import { fetchDoctors, fetchServices, fetchAppointments, loginStaff, updateAppointmentStatus } from './services/api';
 import { Header } from './components/Header';
 import { CrossPromoBanner } from './components/CrossPromoBanner';
 import { ServiceTabs } from './components/ServiceTabs';
@@ -296,9 +296,14 @@ export function App() {
   const handleCancelAppointment = (id: string) => {
     showTelegramConfirm(
       lang === 'uz' ? 'Qabulni bekor qilmoqchimisiz?' : 'Отменить эту запись?',
-      () => {
-        setAppointments(appointments.filter(a => a.id !== id));
-        setReceptionAppointments(receptionAppointments.filter(a => a.id !== id));
+      async () => {
+        try {
+          await updateAppointmentStatus(id, 'cancelled');
+        } catch (e) {
+          console.warn('Backend cancel failed', e);
+        }
+        setAppointments(prev => prev.filter(a => a.id !== id));
+        setReceptionAppointments(prev => prev.filter(a => a.id !== id));
         showToast(lang === 'uz' ? 'Qabul bekor qilindi.' : 'Запись отменена.');
       }
     );
