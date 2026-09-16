@@ -3,6 +3,7 @@ import { Language, Doctor } from '../types';
 import { DOCTORS } from '../data/mockData';
 import { Star, Award, Calendar, CheckCircle2, MapPin, Sparkles, Clock, ArrowRight, ShieldCheck } from 'lucide-react';
 import { LuxuryDoctorIcon, LuxuryToothIcon, LuxuryEntIcon } from './LuxuryIcons';
+import { triggerHaptic } from '../utils/telegramAlerts';
 
 interface DoctorCardProps {
   lang: Language;
@@ -54,9 +55,7 @@ export const DoctorCard: React.FC<DoctorCardProps> = ({ lang, onBookDoctor, doct
     : doctors.filter(d => d.department === filterDept);
 
   const handleBook = (doctor: Doctor) => {
-    if (window.Telegram?.WebApp?.HapticFeedback) {
-      window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-    }
+    triggerHaptic('medium');
     onBookDoctor(doctor);
   };
 
@@ -66,8 +65,8 @@ export const DoctorCard: React.FC<DoctorCardProps> = ({ lang, onBookDoctor, doct
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
         <div>
           <h3 className="font-serif font-bold text-lg text-[#1A221E] dark:text-[#FAF8F5] tracking-tight flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-[#112E24] dark:bg-[#183F32] text-[#C5A880] flex items-center justify-center shadow-xs">
-              <LuxuryDoctorIcon className="w-3.5 h-3.5" />
+            <div className="w-7 h-7 rounded-xl bg-[#112E24] dark:bg-[#183F32] text-[#C5A880] flex items-center justify-center shadow-luxury-sm">
+              <LuxuryDoctorIcon className="w-4 h-4" />
             </div>
             <span>{lang === 'uz' ? 'Yetakchi Shifokorlarimiz' : 'Ведущие Специалисты'}</span>
           </h3>
@@ -78,7 +77,7 @@ export const DoctorCard: React.FC<DoctorCardProps> = ({ lang, onBookDoctor, doct
           </p>
         </div>
 
-        <span className="self-start sm:self-auto bg-[#112E24]/5 dark:bg-[#183F32] text-[#112E24] dark:text-[#FAF8F5] text-[10.5px] font-semibold px-3 py-1 rounded-full border border-[#C5A880]/30 tracking-wider">
+        <span className="self-start sm:self-auto bg-[#112E24]/5 dark:bg-[#183F32] text-[#112E24] dark:text-[#FAF8F5] text-[10.5px] font-semibold font-mono tabular-nums px-3 py-1 rounded-full border border-[#C5A880]/30 tracking-wider">
           {filteredDoctors.length} {lang === 'uz' ? 'mutaxassis' : 'врачей'}
         </span>
       </div>
@@ -86,37 +85,46 @@ export const DoctorCard: React.FC<DoctorCardProps> = ({ lang, onBookDoctor, doct
       {/* Department Filter Pills */}
       <div className="flex bg-[#EBE5DC]/70 dark:bg-[#0A1D16] p-1 border border-[#E8E2D8] dark:border-[#183F32] rounded-full gap-1 text-xs">
         <button
-          onClick={() => setFilterDept('all')}
-          className={`flex-1 py-1.5 px-3 rounded-full transition-all text-xs tracking-wide ${
+          onClick={() => {
+            triggerHaptic('selection');
+            setFilterDept('all');
+          }}
+          className={`flex-1 min-h-[38px] py-1.5 px-3 rounded-full transition-all duration-200 text-xs tracking-wide active:scale-[0.98] ${
             filterDept === 'all'
-              ? 'bg-[#112E24] dark:bg-[#C5A880] text-[#FAF8F5] dark:text-[#07130F] font-semibold shadow-sm'
+              ? 'bg-[#112E24] dark:bg-[#C5A880] text-[#FAF8F5] dark:text-[#07130F] font-semibold shadow-luxury-sm'
               : 'text-[#627068] dark:text-[#9FB1A7] hover:text-[#1A221E] dark:hover:text-[#FAF8F5] font-medium'
           }`}
         >
-          {lang === 'uz' ? 'Barchasi (4)' : 'Все врачи (4)'}
+          {lang === 'uz' ? 'Barchasi' : 'Все'}
         </button>
 
         <button
-          onClick={() => setFilterDept('stomatology')}
-          className={`flex-1 py-1.5 px-3 rounded-full transition-all flex items-center justify-center gap-1.5 text-xs tracking-wide ${
+          onClick={() => {
+            triggerHaptic('selection');
+            setFilterDept('stomatology');
+          }}
+          className={`flex-1 min-h-[38px] py-1.5 px-3 rounded-full transition-all duration-200 flex items-center justify-center gap-1.5 text-xs tracking-wide active:scale-[0.98] ${
             filterDept === 'stomatology'
-              ? 'bg-[#112E24] dark:bg-[#C5A880] text-[#FAF8F5] dark:text-[#07130F] font-semibold shadow-sm'
+              ? 'bg-[#112E24] dark:bg-[#C5A880] text-[#FAF8F5] dark:text-[#07130F] font-semibold shadow-luxury-sm'
               : 'text-[#627068] dark:text-[#9FB1A7] hover:text-[#1A221E] dark:hover:text-[#FAF8F5] font-medium'
           }`}
         >
-          <LuxuryToothIcon className={`w-3.5 h-3.5 ${filterDept === 'stomatology' ? 'text-[#C5A880] dark:text-[#07130F]' : 'text-[#627068] dark:text-[#9FB1A7]'}`} />
+          <LuxuryToothIcon className={`w-3.5 h-3.5 transition-transform duration-300 group-hover:rotate-12 ${filterDept === 'stomatology' ? 'text-[#C5A880] dark:text-[#07130F]' : 'text-[#627068] dark:text-[#9FB1A7]'}`} />
           <span>{lang === 'uz' ? 'Stomatologiya' : 'Стоматология'}</span>
         </button>
 
         <button
-          onClick={() => setFilterDept('lor')}
-          className={`flex-1 py-1.5 px-3 rounded-full transition-all flex items-center justify-center gap-1.5 text-xs tracking-wide ${
+          onClick={() => {
+            triggerHaptic('selection');
+            setFilterDept('lor');
+          }}
+          className={`flex-1 min-h-[38px] py-1.5 px-3 rounded-full transition-all duration-200 flex items-center justify-center gap-1.5 text-xs tracking-wide active:scale-[0.98] ${
             filterDept === 'lor'
-              ? 'bg-[#112E24] dark:bg-[#C5A880] text-[#FAF8F5] dark:text-[#07130F] font-semibold shadow-sm'
+              ? 'bg-[#112E24] dark:bg-[#C5A880] text-[#FAF8F5] dark:text-[#07130F] font-semibold shadow-luxury-sm'
               : 'text-[#627068] dark:text-[#9FB1A7] hover:text-[#1A221E] dark:hover:text-[#FAF8F5] font-medium'
           }`}
         >
-          <LuxuryEntIcon className={`w-3.5 h-3.5 ${filterDept === 'lor' ? 'text-[#C5A880] dark:text-[#07130F]' : 'text-[#627068] dark:text-[#9FB1A7]'}`} />
+          <LuxuryEntIcon className={`w-3.5 h-3.5 transition-transform duration-300 group-hover:scale-110 ${filterDept === 'lor' ? 'text-[#C5A880] dark:text-[#07130F]' : 'text-[#627068] dark:text-[#9FB1A7]'}`} />
           <span>{lang === 'uz' ? 'LOR Markazi' : 'ЛОР Центр'}</span>
         </button>
       </div>
@@ -126,7 +134,7 @@ export const DoctorCard: React.FC<DoctorCardProps> = ({ lang, onBookDoctor, doct
         {filteredDoctors.map(doc => (
           <div
             key={doc.id}
-            className="group relative bg-white dark:bg-[#0E231B] rounded-3xl overflow-hidden border border-[#E8E2D8] dark:border-[#183F32] shadow-sm hover:shadow-xl hover:border-[#C5A880]/60 transition-all duration-300 flex flex-col"
+            className="group relative bg-white dark:bg-[#0E231B] rounded-3xl overflow-hidden border border-[#E8E2D8] dark:border-[#183F32] shadow-luxury-sm hover:shadow-luxury-md hover:border-[#C5A880]/60 transition-all duration-300 flex flex-col"
           >
             {/* HERO DOCTOR PORTRAIT WITH INTELLECTUAL FALLBACK */}
             <div className="relative w-full h-72 sm:h-80 overflow-hidden bg-[#112E24]">
@@ -137,15 +145,15 @@ export const DoctorCard: React.FC<DoctorCardProps> = ({ lang, onBookDoctor, doct
 
               {/* Top Floating Badges */}
               <div className="absolute top-3 inset-x-3 flex items-center justify-between z-10">
-                {/* Rating Badge */}
-                <div className="backdrop-blur-md bg-[#112E24]/85 text-[#FAF8F5] border border-[#C5A880]/40 px-2.5 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 shadow">
+                {/* Rating Badge with tabular numbers */}
+                <div className="backdrop-blur-md bg-[#112E24]/85 text-[#FAF8F5] border border-[#C5A880]/40 px-2.5 py-1 rounded-full text-[11px] font-semibold font-mono tabular-nums flex items-center gap-1.5 shadow-luxury-sm">
                   <Star className="w-3.5 h-3.5 text-[#C5A880] fill-[#C5A880]" />
                   <span>{doc.rating}</span>
                   <span className="text-[#D6BF9F]/80 font-normal">({doc.reviewsCount})</span>
                 </div>
 
                 {/* Department Verified Pill */}
-                <span className="backdrop-blur-md bg-[#C5A880] text-[#112E24] text-[9.5px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow">
+                <span className="backdrop-blur-md bg-[#C5A880] text-[#112E24] text-[9.5px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-luxury-sm">
                   <CheckCircle2 className="w-3 h-3 text-[#112E24]" />
                   <span>{doc.department === 'stomatology' ? 'Dental' : 'LOR'}</span>
                 </span>
@@ -159,7 +167,7 @@ export const DoctorCard: React.FC<DoctorCardProps> = ({ lang, onBookDoctor, doct
                     <span>{lang === 'uz' ? 'Toshkent, Atelier Markazi' : 'Ташкент, Центр Atelier'}</span>
                   </span>
 
-                  <span className="backdrop-blur-md bg-[#FAF8F5]/90 dark:bg-[#0E231B]/90 text-[#1A221E] dark:text-[#FAF8F5] text-[10px] font-medium px-2.5 py-1 rounded-full shadow-sm border border-white/80 dark:border-[#C5A880]/30 flex items-center gap-1">
+                  <span className="backdrop-blur-md bg-[#FAF8F5]/90 dark:bg-[#0E231B]/90 text-[#1A221E] dark:text-[#FAF8F5] text-[10px] font-medium font-mono tabular-nums px-2.5 py-1 rounded-full shadow-sm border border-white/80 dark:border-[#C5A880]/30 flex items-center gap-1">
                     <Award className="w-3 h-3 text-[#C5A880]" />
                     <span>{doc.experience} {lang === 'uz' ? 'yil tajriba' : 'лет опыта'}</span>
                   </span>
@@ -167,7 +175,7 @@ export const DoctorCard: React.FC<DoctorCardProps> = ({ lang, onBookDoctor, doct
 
                 {/* Doctor Name inside the Hero Area */}
                 <div className="text-[#FAF8F5]">
-                  <h4 className="font-serif font-bold text-xl drop-shadow leading-tight">
+                  <h4 className="font-serif font-bold text-xl drop-shadow leading-tight tracking-tight">
                     {doc.name}
                   </h4>
                   <p className="text-xs text-[#D6BF9F] font-sans font-medium drop-shadow-sm">
@@ -195,16 +203,16 @@ export const DoctorCard: React.FC<DoctorCardProps> = ({ lang, onBookDoctor, doct
                 </span>
               </div>
 
-              {/* Luxury CTA Button */}
+              {/* Luxury CTA Button with 44px height & active:scale */}
               <button
                 onClick={() => handleBook(doc)}
-                className="w-full bg-[#112E24] dark:bg-[#183F32] hover:bg-[#183F32] dark:hover:bg-[#225745] active:scale-98 text-[#FAF8F5] border border-[#C5A880]/40 font-semibold text-xs py-2.5 px-4 rounded-full flex items-center justify-between shadow-sm transition-all group/btn"
+                className="w-full min-h-[44px] bg-[#112E24] dark:bg-[#183F32] hover:bg-[#183F32] dark:hover:bg-[#225745] active:scale-[0.98] text-[#FAF8F5] border border-[#C5A880]/40 font-semibold text-xs py-2.5 px-4 rounded-full flex items-center justify-between shadow-luxury-sm transition-all duration-150 group/btn"
               >
                 <span className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-[#C5A880]" />
+                  <Calendar className="w-4 h-4 text-[#C5A880] transition-transform duration-200 group-hover/btn:scale-110" />
                   <span>{lang === 'uz' ? 'Qabulga Yozilish' : 'Записаться на прием'}</span>
                 </span>
-                <span className="bg-[#C5A880] text-[#112E24] p-1.5 rounded-full group-hover/btn:translate-x-1 transition-transform">
+                <span className="bg-[#C5A880] text-[#112E24] p-1.5 rounded-full group-hover/btn:translate-x-1 transition-transform duration-200 shadow-sm">
                   <ArrowRight className="w-3 h-3" />
                 </span>
               </button>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Language } from '../types';
 import { PhoneCall, Send, AlertTriangle, X, ShieldAlert, Clock, MapPin } from 'lucide-react';
+import { triggerHaptic } from '../utils/telegramAlerts';
 
 interface EmergencyFloatingButtonProps {
   lang: Language;
@@ -13,6 +14,7 @@ export const EmergencyFloatingButton: React.FC<EmergencyFloatingButtonProps> = (
   const adminTelegramUrl = 'https://t.me/dentamed_admin';
 
   const handleOpenTelegram = () => {
+    triggerHaptic('medium');
     if (window.Telegram?.WebApp?.openTelegramLink) {
       window.Telegram.WebApp.openTelegramLink(adminTelegramUrl);
     } else {
@@ -22,15 +24,18 @@ export const EmergencyFloatingButton: React.FC<EmergencyFloatingButtonProps> = (
 
   return (
     <>
-      {/* Compact Elegant Boutique SOS Button (Non-intrusive) */}
+      {/* Compact Elegant Boutique SOS Button (Non-intrusive, 44x44px min touch target) */}
       <div className="fixed bottom-20 right-3.5 z-40">
         <button
-          onClick={() => setIsOpen(true)}
-          className="relative w-11 h-11 bg-[#112E24]/90 hover:bg-[#183F32] dark:bg-[#0E231B]/95 backdrop-blur-md text-[#FAF8F5] rounded-full shadow-lg border border-[#C5A880]/60 hover:border-[#C5A880] flex items-center justify-center transition-all duration-200 active:scale-90 hover:shadow-[#C5A880]/20"
+          onClick={() => {
+            triggerHaptic('heavy');
+            setIsOpen(true);
+          }}
+          className="relative w-12 h-12 bg-[#112E24]/90 hover:bg-[#183F32] dark:bg-[#0E231B]/95 backdrop-blur-md text-[#FAF8F5] rounded-full shadow-luxury-md border border-[#C5A880]/60 hover:border-[#C5A880] flex items-center justify-center transition-all duration-200 active:scale-90 hover:shadow-glow-gold"
           aria-label="Favqulodda yordam"
           title={lang === 'uz' ? "24/7 Shoshilinch yordam" : "24/7 Экстренная помощь"}
         >
-          <PhoneCall className="w-4 h-4 text-[#C5A880] group-hover:text-white transition" />
+          <PhoneCall className="w-4 h-4 text-[#C5A880] group-hover:text-white transition-transform duration-200 group-hover:scale-110" />
           
           {/* Subtle SOS Mini-Badge */}
           <span className="absolute -top-1 -right-1 bg-rose-600 text-white text-[8px] font-black px-1.5 py-0.2 rounded-full shadow-sm tracking-wider border border-white/20">
@@ -84,12 +89,13 @@ export const EmergencyFloatingButton: React.FC<EmergencyFloatingButtonProps> = (
               </p>
             </div>
 
-            {/* Direct Actions */}
+            {/* Direct Actions with 44px min touch target */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
               {/* Phone Call */}
               <a
                 href={`tel:${emergencyPhone}`}
-                className="flex items-center justify-center gap-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs py-3.5 px-4 rounded-2xl shadow-md transition active:scale-95 text-center"
+                onClick={() => triggerHaptic('heavy')}
+                className="min-h-[44px] flex items-center justify-center gap-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs py-3 px-4 rounded-2xl shadow-luxury-sm hover:shadow-luxury-md transition-all duration-150 active:scale-[0.98] text-center"
               >
                 <PhoneCall className="w-4 h-4" />
                 <span>{lang === 'uz' ? 'Qo\'ng\'iroq qilish' : 'Позвонить в клинику'}</span>
@@ -98,7 +104,7 @@ export const EmergencyFloatingButton: React.FC<EmergencyFloatingButtonProps> = (
               {/* Telegram Chat */}
               <button
                 onClick={handleOpenTelegram}
-                className="flex items-center justify-center gap-2.5 bg-[#2AABEE] hover:bg-[#229ED9] text-white font-bold text-xs py-3.5 px-4 rounded-2xl shadow-md transition active:scale-95 text-center"
+                className="min-h-[44px] flex items-center justify-center gap-2.5 bg-[#2AABEE] hover:bg-[#229ED9] text-white font-bold text-xs py-3 px-4 rounded-2xl shadow-luxury-sm hover:shadow-luxury-md transition-all duration-150 active:scale-[0.98] text-center"
               >
                 <Send className="w-4 h-4" />
                 <span>{lang === 'uz' ? 'Telegram Yordamchi' : 'Telegram Чат'}</span>

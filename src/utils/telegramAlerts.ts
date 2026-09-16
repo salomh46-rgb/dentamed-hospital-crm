@@ -38,3 +38,28 @@ export const showTelegramAlert = (message: string, onClose?: () => void) => {
     if (onClose) onClose();
   }
 };
+
+/**
+ * Trigger subtle tactile vibration (Telegram WebApp or mobile navigator fallback)
+ * Follows 2026 Elite Mobile Ergonomics standard.
+ */
+export const triggerHaptic = (
+  type: 'light' | 'medium' | 'heavy' | 'success' | 'warning' | 'error' | 'selection' = 'light'
+) => {
+  try {
+    const haptic = window.Telegram?.WebApp?.HapticFeedback;
+    if (haptic) {
+      if (type === 'selection') {
+        haptic.selectionChanged();
+      } else if (type === 'success' || type === 'warning' || type === 'error') {
+        haptic.notificationOccurred(type);
+      } else {
+        haptic.impactOccurred(type);
+      }
+      return;
+    }
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate(type === 'heavy' ? 25 : 12);
+    }
+  } catch {}
+};

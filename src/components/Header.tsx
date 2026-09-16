@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Language, ClinicId, StaffSession } from '../types';
 import { CLINICS, TENANTS } from '../data/mockData';
 import { PhoneCall, Globe, Clock, Sparkles, Sun, Moon, MapPin, Building2, ChevronDown, Lock, Crown, Check } from 'lucide-react';
+import { triggerHaptic } from '../utils/telegramAlerts';
 
 interface HeaderProps {
   lang: Language;
@@ -269,8 +270,11 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Quick appointments badge */}
           <button
-            onClick={() => setActiveTab('appointments')}
-            className={`relative p-2 rounded-xl border transition-all ${
+            onClick={() => {
+              triggerHaptic('selection');
+              setActiveTab('appointments');
+            }}
+            className={`relative p-2 rounded-xl border transition-all active:scale-[0.98] ${
               activeTab === 'appointments'
                 ? 'bg-[#112E24] dark:bg-[#C5A880] border-[#112E24] dark:border-[#C5A880] text-[#FAF8F5] dark:text-[#07130F]'
                 : 'bg-white dark:bg-[#0E231B] border-[#E8E2D8] dark:border-[#C5A880]/30 text-[#1A221E] dark:text-[#FAF8F5] hover:border-[#C5A880]'
@@ -279,7 +283,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Clock className="w-4 h-4" />
             {appointmentsCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-[#C5A880] text-[#112E24] text-[10px] font-extrabold w-4 h-4 rounded-full flex items-center justify-center shadow-sm">
+              <span className="absolute -top-1 -right-1 bg-[#C5A880] text-[#112E24] text-[10px] font-extrabold font-mono tabular-nums w-4 h-4 rounded-full flex items-center justify-center shadow-sm">
                 {appointmentsCount}
               </span>
             )}
@@ -288,7 +292,7 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Navigation tabs */}
-      <div className="max-w-xl mx-auto px-2 flex gap-1.5 border-t border-[#E8E2D8]/80 dark:border-[#183F32] overflow-x-auto no-scrollbar py-1.5 items-center">
+      <div className="max-w-xl mx-auto px-2 flex gap-1.5 border-t border-[#E8E2D8]/80 dark:border-[#183F32] overflow-x-auto no-scrollbar py-2 items-center">
         {[
           { id: 'services', labelUz: 'Xizmatlar', labelRu: 'Услуги', icon: Sparkles },
           ...(isStaff ? [{ id: 'reception', labelUz: isDirector ? '👑 Boshqaruv (Kanban)' : '📋 Retsepshn', labelRu: isDirector ? '👑 Руководство' : '📋 Ресепшн', icon: null, highlight: true }] : []),
@@ -302,10 +306,13 @@ export const Header: React.FC<HeaderProps> = ({
           return (
             <button
               key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`px-3 py-1 rounded-full text-xs tracking-wide transition-all whitespace-nowrap flex items-center gap-1 ${
+              onClick={() => {
+                triggerHaptic('selection');
+                setActiveTab(item.id);
+              }}
+              className={`min-h-[36px] px-3.5 py-1.5 rounded-full text-xs tracking-wide transition-all duration-150 whitespace-nowrap flex items-center gap-1 active:scale-[0.98] font-mono tabular-nums ${
                 isActive
-                  ? 'bg-[#112E24] dark:bg-[#C5A880] text-[#FAF8F5] dark:text-[#07130F] font-semibold shadow-sm'
+                  ? 'bg-[#112E24] dark:bg-[#C5A880] text-[#FAF8F5] dark:text-[#07130F] font-semibold shadow-luxury-sm'
                   : item.highlight
                   ? 'text-[#C5A880] bg-[#C5A880]/10 hover:bg-[#C5A880]/20 font-semibold border border-[#C5A880]/30'
                   : 'text-[#627068] dark:text-[#9FB1A7] hover:text-[#1A221E] dark:hover:text-[#FAF8F5] hover:bg-[#EBE5DC]/60 dark:hover:bg-[#183F32]/60 font-medium'

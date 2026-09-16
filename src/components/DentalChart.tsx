@@ -4,6 +4,7 @@ import { INITIAL_TEETH } from '../data/mockData';
 import { Info, CheckCircle2, AlertCircle, Sparkles, Calendar, HelpCircle, Compass, Search, Stethoscope, MapPin, X, Percent } from 'lucide-react';
 import { InteractiveJawModel } from './InteractiveJawModel';
 import { LuxuryToothIcon, QuadrantArrowIcon } from './LuxuryIcons';
+import { triggerHaptic } from '../utils/telegramAlerts';
 
 interface DentalChartProps {
   lang: Language;
@@ -130,6 +131,7 @@ export const DentalChart: React.FC<DentalChartProps> = ({ lang, onBookTooth }) =
   };
 
   const handleBookCurrentPlan = () => {
+    triggerHaptic('medium');
     const mainTooth = selectedTooth || selectedTeeth[0] || INITIAL_TEETH[18];
     onBookTooth(
       mainTooth,
@@ -435,7 +437,7 @@ export const DentalChart: React.FC<DentalChartProps> = ({ lang, onBookTooth }) =
                   ? `Tanlangan tishlar (${selectedTeeth.length} ta):`
                   : `Выбранные зубы (${selectedTeeth.length}):`}
               </span>
-              <span className="font-semibold text-white">
+              <span className="font-mono tabular-nums font-semibold text-white">
                 {teethSubtotal.toLocaleString('uz-UZ')} {lang === 'uz' ? "so'm" : 'сум'}
               </span>
             </div>
@@ -458,10 +460,10 @@ export const DentalChart: React.FC<DentalChartProps> = ({ lang, onBookTooth }) =
               <div className="text-right">
                 {includePromoUltrasonic ? (
                   <div>
-                    <span className="text-[10px] text-white/50 line-through mr-1.5">
+                    <span className="font-mono tabular-nums text-[10px] text-white/50 line-through mr-1.5">
                       {ULTRASONIC_ORIGINAL_PRICE.toLocaleString('uz-UZ')}
                     </span>
-                    <span className="font-bold text-[#C5A880]">
+                    <span className="font-mono tabular-nums font-bold text-[#C5A880]">
                       {ULTRASONIC_PROMO_PRICE.toLocaleString('uz-UZ')} {lang === 'uz' ? "so'm" : 'сум'}
                     </span>
                   </div>
@@ -478,7 +480,7 @@ export const DentalChart: React.FC<DentalChartProps> = ({ lang, onBookTooth }) =
                   <Sparkles className="w-3.5 h-3.5 text-[#C5A880]" />
                   <span>{lang === 'uz' ? 'Sizning tejamkoringiz:' : 'Ваша экономия:'}</span>
                 </span>
-                <span className="font-bold text-[#C5A880]">
+                <span className="font-mono tabular-nums font-bold text-[#C5A880]">
                   -{ULTRASONIC_DISCOUNT_AMOUNT.toLocaleString('uz-UZ')} {lang === 'uz' ? "so'm (50%)" : 'сум (50%)'}
                 </span>
               </div>
@@ -487,7 +489,7 @@ export const DentalChart: React.FC<DentalChartProps> = ({ lang, onBookTooth }) =
             {/* Final Total */}
             <div className="pt-2 border-t border-white/10 flex items-center justify-between font-bold text-sm">
               <span className="text-white">{lang === 'uz' ? 'Jami qabul narxi:' : 'Итоговая стоимость:'}</span>
-              <span className="font-serif text-base text-[#C5A880]">
+              <span className="font-mono tabular-nums font-serif text-base text-[#C5A880]">
                 {totalWithPromo.toLocaleString('uz-UZ')} {lang === 'uz' ? "so'm" : 'сум'}
               </span>
             </div>
@@ -496,7 +498,7 @@ export const DentalChart: React.FC<DentalChartProps> = ({ lang, onBookTooth }) =
           {/* Action CTA with Promo */}
           <button
             onClick={handleBookCurrentPlan}
-            className="w-full bg-[#C5A880] hover:bg-[#D6BF9F] active:scale-98 text-[#112E24] font-bold text-xs py-3.5 rounded-full flex items-center justify-center gap-2 shadow-lg transition-all"
+            className="w-full min-h-[44px] bg-[#C5A880] hover:bg-[#D6BF9F] active:scale-[0.98] text-[#112E24] font-bold text-xs py-3.5 px-4 rounded-full flex items-center justify-center gap-2 shadow-lg transition-all"
           >
             <Calendar className="w-4 h-4 text-[#112E24]" />
             <span>
@@ -607,8 +609,11 @@ export const DentalChart: React.FC<DentalChartProps> = ({ lang, onBookTooth }) =
           </div>
 
           <button
-            onClick={() => onBookTooth(teeth[0])}
-            className="w-full bg-[#C5A880] hover:bg-[#D6BF9F] active:scale-98 text-[#112E24] font-bold text-xs py-3 rounded-full flex items-center justify-center gap-2 shadow-md transition-all"
+            onClick={() => {
+              triggerHaptic('medium');
+              onBookTooth(teeth[0]);
+            }}
+            className="w-full min-h-[44px] bg-[#C5A880] hover:bg-[#D6BF9F] active:scale-[0.98] text-[#112E24] font-bold text-xs py-3 px-4 rounded-full flex items-center justify-center gap-2 shadow-md transition-all"
           >
             <Calendar className="w-4 h-4 text-[#112E24]" />
             <span>
@@ -671,7 +676,7 @@ export const DentalChart: React.FC<DentalChartProps> = ({ lang, onBookTooth }) =
                   <span className="text-[9.5px] text-[#D6BF9F] block font-semibold uppercase tracking-wider">
                     {lang === 'uz' ? 'Muolaja narxi:' : 'Стоимость:'}
                   </span>
-                  <span className="font-serif text-lg font-bold text-[#C5A880] mt-0.5 block">
+                  <span className="font-mono tabular-nums font-serif text-lg font-bold text-[#C5A880] mt-0.5 block">
                     {activeTooth.price.toLocaleString('uz-UZ')} <span className="font-sans text-xs font-normal text-[#FAF8F5]/70">{lang === 'uz' ? 'so\'m' : 'сум'}</span>
                   </span>
                 </div>
@@ -681,7 +686,7 @@ export const DentalChart: React.FC<DentalChartProps> = ({ lang, onBookTooth }) =
             {activeTooth.condition !== 'healthy' && activeTooth.condition !== 'missing' && (
               <button
                 onClick={() => handleBookCurrentPlan()}
-                className="w-full bg-[#C5A880] hover:bg-[#D6BF9F] active:scale-98 text-[#112E24] font-bold text-xs py-3 rounded-full flex items-center justify-center gap-2 shadow-md transition-all"
+                className="w-full min-h-[44px] bg-[#C5A880] hover:bg-[#D6BF9F] active:scale-[0.98] text-[#112E24] font-bold text-xs py-3 px-4 rounded-full flex items-center justify-center gap-2 shadow-md transition-all"
               >
                 <Calendar className="w-4 h-4 text-[#112E24]" />
                 <span>

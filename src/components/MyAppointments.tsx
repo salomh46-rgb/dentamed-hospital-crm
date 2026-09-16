@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Language, Appointment } from '../types';
 import { Calendar, Clock, QrCode, AlertCircle, XCircle, BellRing, PhoneCall, ShieldCheck, MapPin, User, Info, Ticket } from 'lucide-react';
 import { DigitalTicketModal } from './DigitalTicketModal';
+import { SpotlightCard } from './SpotlightCard';
+import { triggerHaptic } from '../utils/telegramAlerts';
 
 interface MyAppointmentsProps {
   lang: Language;
@@ -58,9 +60,9 @@ export const MyAppointments: React.FC<MyAppointmentsProps> = ({
 
       <div className="grid gap-3.5">
         {appointments.map(app => (
-          <div
+          <SpotlightCard
             key={app.id}
-            className="bg-white dark:bg-[#0E231B] rounded-3xl p-5 border border-[#E8E2D8] dark:border-[#183F32] shadow-sm space-y-4 relative overflow-hidden"
+            className="p-5 space-y-4 hover:border-[#C5A880]/60 transition-all duration-300"
           >
             {/* Top Badge & Status */}
             <div className="flex items-center justify-between border-b border-[#E8E2D8] dark:border-[#183F32] pb-3">
@@ -69,12 +71,12 @@ export const MyAppointments: React.FC<MyAppointmentsProps> = ({
                   <span className="w-1.5 h-1.5 rounded-full bg-[#C5A880] animate-pulse"></span>
                   {lang === 'uz' ? 'Qabul Tasdiqlangan' : 'Прием подтвержден'}
                 </span>
-                <span className="font-mono text-[10px] font-semibold text-[#627068] dark:text-[#9FB1A7]">
+                <span className="font-mono tabular-nums text-[10px] font-semibold text-[#627068] dark:text-[#9FB1A7]">
                   #{app.id}
                 </span>
               </div>
 
-              <div className="flex items-center gap-1 text-xs font-semibold text-[#112E24] dark:text-[#FAF8F5] bg-[#FAF8F5] dark:bg-[#183F32]/60 px-3 py-1 rounded-full border border-[#E8E2D8] dark:border-[#C5A880]/30">
+              <div className="flex items-center gap-1 text-xs font-semibold font-mono tabular-nums text-[#112E24] dark:text-[#FAF8F5] bg-[#FAF8F5] dark:bg-[#183F32]/60 px-3 py-1 rounded-full border border-[#E8E2D8] dark:border-[#C5A880]/30">
                 <Calendar className="w-3.5 h-3.5 text-[#C5A880]" />
                 <span>{app.date}</span>
                 <span>•</span>
@@ -83,15 +85,15 @@ export const MyAppointments: React.FC<MyAppointmentsProps> = ({
               </div>
             </div>
 
-            {/* Reception Fast PIN Code Banner */}
-            <div className="bg-[#112E24] dark:bg-[#071711] rounded-2xl p-4 text-[#FAF8F5] flex items-center justify-between border border-[#C5A880]/30 shadow-sm">
+            {/* Reception Fast PIN Code Banner with Strict Tabular Numbers */}
+            <div className="bg-[#112E24] dark:bg-[#071711] rounded-2xl p-4 text-[#FAF8F5] flex items-center justify-between border border-[#C5A880]/30 shadow-luxury-sm">
               <div>
                 <span className="text-[10px] text-[#D6BF9F] uppercase tracking-widest font-semibold flex items-center gap-1">
                   <ShieldCheck className="w-3.5 h-3.5 text-[#C5A880]" />
                   <span>{lang === 'uz' ? 'Retsepshnda aytiladigan kod:' : 'Код для регистратуры:'}</span>
                 </span>
                 <div className="flex items-baseline gap-2 mt-0.5">
-                  <span className="text-2xl sm:text-3xl font-mono font-bold tracking-widest text-[#C5A880]">
+                  <span className="text-2xl sm:text-3xl font-mono tabular-nums font-bold tracking-widest text-[#C5A880]">
                     {app.pinCode || '8492'}
                   </span>
                   <span className="text-[10px] text-[#FAF8F5]/80 bg-white/10 px-2 py-0.5 rounded-full">
@@ -101,7 +103,7 @@ export const MyAppointments: React.FC<MyAppointmentsProps> = ({
               </div>
 
               {/* QR Code */}
-              <div className="flex flex-col items-center justify-center p-2 bg-white rounded-xl shadow text-[#112E24]">
+              <div className="flex flex-col items-center justify-center p-2 bg-white rounded-xl shadow-luxury-sm text-[#112E24]">
                 <QrCode className="w-9 h-9 text-[#112E24]" />
                 <span className="text-[7px] font-bold tracking-tighter text-[#627068] mt-0.5">ATELIER PASS</span>
               </div>
@@ -115,7 +117,7 @@ export const MyAppointments: React.FC<MyAppointmentsProps> = ({
                 className="w-12 h-12 rounded-xl object-cover object-top border border-white shadow-sm"
               />
               <div className="flex-1 min-w-0">
-                <h4 className="font-serif font-bold text-xs text-[#1A221E] dark:text-[#FAF8F5] truncate">
+                <h4 className="font-serif font-bold text-xs text-[#1A221E] dark:text-[#FAF8F5] truncate tracking-tight">
                   {app.doctor.name}
                 </h4>
                 <p className="text-[11px] text-[#C5A880] font-medium truncate">
@@ -145,12 +147,15 @@ export const MyAppointments: React.FC<MyAppointmentsProps> = ({
               </span>
             </div>
 
-            {/* Actions */}
+            {/* Actions with 44px min touch target */}
             <div className="pt-2 border-t border-[#E8E2D8] dark:border-[#183F32] flex items-center justify-between gap-2">
               <div className="flex items-center gap-1.5">
                 <button
-                  onClick={() => setSelectedTicketAppt(app)}
-                  className="flex items-center gap-1.5 text-xs font-semibold text-[#112E24] dark:text-[#07130F] bg-[#C5A880] hover:bg-[#D6BF9F] px-3.5 py-2 rounded-full transition shadow-xs"
+                  onClick={() => {
+                    triggerHaptic('medium');
+                    setSelectedTicketAppt(app);
+                  }}
+                  className="min-h-[40px] flex items-center gap-1.5 text-xs font-semibold text-[#112E24] dark:text-[#07130F] bg-[#C5A880] hover:bg-[#D6BF9F] active:scale-[0.98] px-4 py-2 rounded-full transition-all duration-150 shadow-luxury-sm"
                   title={lang === 'uz' ? 'Raqamli kvitansiya / QR-bron chiptasi' : 'Электронный талон / QR-билет'}
                 >
                   <Ticket className="w-3.5 h-3.5" />
@@ -159,7 +164,7 @@ export const MyAppointments: React.FC<MyAppointmentsProps> = ({
 
                 <a
                   href="tel:+998712000000"
-                  className="flex items-center gap-1.5 text-xs font-semibold text-[#1A221E] dark:text-[#FAF8F5] bg-[#FAF8F5] dark:bg-[#0A1D16] hover:border-[#C5A880] border border-[#E8E2D8] dark:border-[#183F32] px-3 py-2 rounded-full transition"
+                  className="min-h-[40px] flex items-center gap-1.5 text-xs font-semibold text-[#1A221E] dark:text-[#FAF8F5] bg-[#FAF8F5] dark:bg-[#0A1D16] hover:border-[#C5A880] border border-[#E8E2D8] dark:border-[#183F32] px-3.5 py-2 rounded-full transition-all duration-150 active:scale-[0.98]"
                 >
                   <PhoneCall className="w-3.5 h-3.5 text-[#C5A880]" />
                   <span>{lang === 'uz' ? 'Qo\'ng\'iroq' : 'Связь'}</span>
@@ -167,14 +172,17 @@ export const MyAppointments: React.FC<MyAppointmentsProps> = ({
               </div>
 
               <button
-                onClick={() => onCancel(app.id)}
-                className="flex items-center gap-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 px-3.5 py-2 rounded-full transition"
+                onClick={() => {
+                  triggerHaptic('warning');
+                  onCancel(app.id);
+                }}
+                className="min-h-[40px] flex items-center gap-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 px-3.5 py-2 rounded-full transition-all duration-150 active:scale-[0.98]"
               >
                 <XCircle className="w-3.5 h-3.5" />
                 <span>{lang === 'uz' ? 'Bekor qilish' : 'Отменить'}</span>
               </button>
             </div>
-          </div>
+          </SpotlightCard>
         ))}
       </div>
 

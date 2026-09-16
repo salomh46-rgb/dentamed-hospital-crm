@@ -16,6 +16,8 @@ import { DigitalTicketModal } from './components/DigitalTicketModal';
 import { ReceptionDashboard } from './components/ReceptionDashboard';
 import { ClinicOwnerDashboard } from './components/ClinicOwnerDashboard';
 import { HospitalWebPortal } from './components/HospitalWebPortal';
+import { SpotlightCard } from './components/SpotlightCard';
+import { triggerHaptic } from './utils/telegramAlerts';
 import { Calendar, CheckCircle2, Shield, Award, Users, Building2, MapPin, Phone, Lock, Crown } from 'lucide-react';
 
 export function App() {
@@ -483,33 +485,33 @@ export function App() {
 
         {activeTab === 'services' && (
           <div className="space-y-6">
-            {/* Multi-Tenant Branch Hero Card */}
-            <div className="bg-white dark:bg-[#0E231B] rounded-3xl p-4 sm:p-5 border border-[#E8E2D8] dark:border-[#183F32] shadow-sm relative overflow-hidden">
+            {/* Multi-Tenant Branch Hero Card with 2026 Spotlight Cursor Physics */}
+            <SpotlightCard className="p-5 sm:p-6 shadow-luxury-md">
               <div className="flex items-center justify-between gap-2 mb-3 pb-3 border-b border-[#E8E2D8] dark:border-[#183F32]">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-9 h-9 rounded-2xl bg-[#112E24] dark:bg-[#C5A880] text-[#FAF8F5] dark:text-[#07130F] flex items-center justify-center shrink-0 shadow">
+                  <div className="w-10 h-10 rounded-2xl bg-[#112E24] dark:bg-[#C5A880] text-[#FAF8F5] dark:text-[#07130F] flex items-center justify-center shrink-0 shadow-luxury-sm">
                     <Building2 className="w-5 h-5" />
                   </div>
                   <div className="min-w-0">
                     <div className="text-[10px] font-bold uppercase tracking-wider text-[#C5A880]">
                       {currentTenant?.name || 'DentaMed Atelier'}
                     </div>
-                    <h2 className="text-sm sm:text-base font-serif font-bold text-[#112E24] dark:text-[#FAF8F5] truncate">
+                    <h2 className="text-sm sm:text-base font-serif font-bold text-[#112E24] dark:text-[#FAF8F5] truncate tracking-tight">
                       {currentClinic?.name}
                     </h2>
                   </div>
                 </div>
 
-                <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-[#112E24]/5 dark:bg-[#C5A880]/10 text-[#112E24] dark:text-[#C5A880] border border-[#C5A880]/20 shrink-0">
+                <span className="text-[11px] font-medium font-mono tabular-nums px-3 py-1 rounded-full bg-[#112E24]/5 dark:bg-[#C5A880]/10 text-[#112E24] dark:text-[#C5A880] border border-[#C5A880]/20 shrink-0">
                   {filteredDoctors.length} {lang === 'uz' ? 'shifokor' : 'врачей'}
                 </span>
               </div>
 
-              {/* Branch quick pills */}
+              {/* Branch quick pills with 44px min touch target & active scale */}
               <div className="space-y-2">
                 <div className="text-[11px] font-medium text-[#627068] dark:text-[#9FB1A7] flex items-center justify-between">
                   <span>{lang === 'uz' ? 'Filialni tanlang:' : 'Выберите филиал:'}</span>
-                  <span className="text-[10px] text-[#C5A880]">
+                  <span className="text-[10px] font-mono tabular-nums text-[#C5A880]">
                     {tenantClinics.length} {lang === 'uz' ? 'ta filial mavjud' : 'филиалов'}
                   </span>
                 </div>
@@ -521,14 +523,17 @@ export function App() {
                       <button
                         key={clinic.id}
                         type="button"
-                        onClick={() => setSelectedClinicId(clinic.id)}
-                        className={`text-xs px-3 py-1.5 rounded-xl font-medium whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                        onClick={() => {
+                          triggerHaptic('selection');
+                          setSelectedClinicId(clinic.id);
+                        }}
+                        className={`text-xs min-h-[38px] px-3.5 py-1.5 rounded-xl font-medium whitespace-nowrap transition-all duration-150 active:scale-[0.98] flex items-center gap-1.5 ${
                           isSelected
-                            ? 'bg-[#112E24] dark:bg-[#C5A880] text-[#FAF8F5] dark:text-[#07130F] shadow-sm font-semibold'
+                            ? 'bg-[#112E24] dark:bg-[#C5A880] text-[#FAF8F5] dark:text-[#07130F] shadow-luxury-sm font-semibold'
                             : 'bg-[#FAF8F5] dark:bg-[#07130F] text-[#627068] dark:text-[#9FB1A7] hover:border-[#C5A880]/40 border border-[#E8E2D8] dark:border-[#183F32]'
                         }`}
                       >
-                        <MapPin className={`w-3 h-3 ${isSelected ? 'text-[#C5A880] dark:text-[#07130F]' : 'text-[#627068]'}`} />
+                        <MapPin className={`w-3.5 h-3.5 ${isSelected ? 'text-[#C5A880] dark:text-[#07130F]' : 'text-[#627068]'}`} />
                         <span>{branchTitle}</span>
                       </button>
                     );
@@ -544,17 +549,17 @@ export function App() {
                     <span className="truncate">{currentClinic.address[lang] || currentClinic.address.uz}</span>
                   </div>
                   <div className="flex items-center justify-between sm:justify-end gap-3">
-                    <span className="flex items-center gap-1">
+                    <span className="flex items-center gap-1 font-mono tabular-nums">
                       <Phone className="w-3.5 h-3.5 text-[#C5A880] shrink-0" />
                       <span>{currentClinic.phone}</span>
                     </span>
-                    <span className="bg-[#FAF8F5] dark:bg-[#07130F] px-2 py-0.5 rounded-md border border-[#E8E2D8] dark:border-[#183F32] text-[10px]">
+                    <span className="bg-[#FAF8F5] dark:bg-[#07130F] px-2.5 py-1 rounded-md border border-[#E8E2D8] dark:border-[#183F32] text-[10.5px] font-mono tabular-nums">
                       {currentClinic.workingHours[lang] || currentClinic.workingHours.uz}
                     </span>
                   </div>
                 </div>
               )}
-            </div>
+            </SpotlightCard>
 
             <ServiceTabs
               lang={lang}
@@ -562,19 +567,19 @@ export function App() {
               services={filteredServices}
             />
 
-            {/* Trust Badges */}
+            {/* Trust Badges with Tabular Numbers & 3-layer Ambient Shadows */}
             <div className="grid grid-cols-3 gap-2.5 pt-1">
-              <div className="bg-white dark:bg-[#0E231B] p-3.5 rounded-3xl border border-[#E8E2D8] dark:border-[#183F32] text-center shadow-sm">
+              <div className="bg-white dark:bg-[#0E231B] p-3.5 rounded-3xl border border-[#E8E2D8] dark:border-[#183F32] text-center shadow-luxury-sm hover:shadow-luxury-md transition-shadow">
                 <Users className="w-5 h-5 text-[#C5A880] mx-auto mb-1.5" />
-                <div className="font-serif font-bold text-sm text-[#112E24] dark:text-[#FAF8F5]">15 000+</div>
+                <div className="font-serif font-bold text-sm text-[#112E24] dark:text-[#FAF8F5] font-mono tabular-nums tracking-tight">15 000+</div>
                 <div className="text-[10px] text-[#627068] dark:text-[#9FB1A7] tracking-wide">
                   {lang === 'uz' ? 'Bemorlar' : 'Пациентов'}
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-[#0E231B] p-3.5 rounded-3xl border border-[#E8E2D8] dark:border-[#183F32] text-center shadow-sm">
+              <div className="bg-white dark:bg-[#0E231B] p-3.5 rounded-3xl border border-[#E8E2D8] dark:border-[#183F32] text-center shadow-luxury-sm hover:shadow-luxury-md transition-shadow">
                 <Shield className="w-5 h-5 text-[#C5A880] mx-auto mb-1.5" />
-                <div className="font-serif font-bold text-sm text-[#112E24] dark:text-[#FAF8F5]">100%</div>
+                <div className="font-serif font-bold text-sm text-[#112E24] dark:text-[#FAF8F5] font-mono tabular-nums tracking-tight">100%</div>
                 <div className="text-[10px] text-[#627068] dark:text-[#9FB1A7] tracking-wide">
                   {lang === 'uz' ? 'Og\'riqsiz' : 'Без боли'}
                 </div>

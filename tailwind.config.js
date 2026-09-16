@@ -8,6 +8,16 @@ export default {
   theme: {
     extend: {
       colors: {
+        obsidian: {
+          DEFAULT: '#050608',
+          50: '#1a1d24',
+          100: '#14171c',
+          200: '#0f1217',
+          300: '#0b0d11',
+          400: '#08090d',
+          500: '#050608',
+          900: '#020304',
+        },
         luxury: {
           emerald: '#112E24',
           'emerald-light': '#183F32',
@@ -28,7 +38,7 @@ export default {
           200: '#99f6e4',
           300: '#5eead4',
           400: '#2dd4bf',
-          500: '#112E24', // Remap default medical to deep emerald
+          500: '#112E24',
           600: '#0d9488',
           700: '#0f766e',
           800: '#115e59',
@@ -42,9 +52,37 @@ export default {
           900: '#0b1d3a',
         }
       },
+      boxShadow: {
+        // Shadows BRRR - 3-layer soft ambient blur standard
+        'luxury-sm': '0 1px 2px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.04)',
+        'luxury-md': '0 2px 4px rgba(0,0,0,0.04), 0 8px 16px rgba(0,0,0,0.06), 0 16px 32px rgba(0,0,0,0.05)',
+        'luxury-lg': '0 4px 8px rgba(0,0,0,0.04), 0 12px 24px rgba(0,0,0,0.08), 0 24px 48px rgba(0,0,0,0.06)',
+        'glow-gold': '0 0 20px rgba(197, 168, 128, 0.25)',
+        'glow-emerald': '0 0 24px rgba(17, 46, 36, 0.35)',
+      },
+      keyframes: {
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
+        'border-beam': {
+          '0%, 100%': { transform: 'rotate(0deg)' },
+          '50%': { transform: 'rotate(180deg)' },
+        },
+        'pulse-subtle': {
+          '0%, 100%': { opacity: '1', transform: 'scale(1)' },
+          '50%': { opacity: '0.92', transform: 'scale(1.02)' },
+        }
+      },
+      animation: {
+        shimmer: 'shimmer 2.2s infinite linear',
+        'border-beam': 'border-beam 6s linear infinite',
+        'pulse-subtle': 'pulse-subtle 3s ease-in-out infinite',
+      },
       fontFamily: {
         serif: ['Playfair Display', 'Georgia', 'serif'],
         sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
       }
     },
   },

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Language } from '../../types';
 import { Key, Lock, Phone, X } from 'lucide-react';
+import { triggerHaptic } from '../../utils/telegramAlerts';
 
 interface PinLoginModalProps {
   isOpen: boolean;
@@ -173,14 +174,17 @@ export const PinLoginModal: React.FC<PinLoginModalProps> = ({
           <div className="flex gap-2.5 pt-2">
             <button
               type="button"
-              onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+              onClick={() => {
+                triggerHaptic('light');
+                onClose();
+              }}
+              className="flex-1 min-h-[44px] py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition duration-150 active:scale-[0.98]"
             >
               {lang === 'uz' ? 'Bekor qilish' : 'Отмена'}
             </button>
             <button
               type="submit"
-              className="flex-1 py-2.5 rounded-xl bg-[#112E24] dark:bg-[#C5A880] text-[#FAF8F5] dark:text-[#07130F] text-xs font-bold transition shadow-md hover:scale-95 flex items-center justify-center gap-1.5"
+              className="flex-1 min-h-[44px] py-2.5 rounded-xl bg-[#112E24] dark:bg-[#C5A880] text-[#FAF8F5] dark:text-[#07130F] text-xs font-bold transition-all duration-150 shadow-luxury-sm hover:shadow-luxury-md active:scale-[0.98] flex items-center justify-center gap-1.5"
             >
               <Lock className="w-3.5 h-3.5" />
               <span>{lang === 'uz' ? 'Tizimga Kirish' : 'Войти'}</span>

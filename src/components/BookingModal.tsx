@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Language, Doctor, Service, Appointment, ClinicId } from '../types';
 import { DOCTORS, SERVICES, TIME_SLOTS } from '../data/mockData';
 import { X, Calendar, Clock, User, Phone, CheckCircle, ArrowRight, ArrowLeft, Lock } from 'lucide-react';
-import { showTelegramAlert } from '../utils/telegramAlerts';
+import { showTelegramAlert, triggerHaptic } from '../utils/telegramAlerts';
 import { fetchBusySlots } from '../services/api';
 
 interface BookingModalProps {
@@ -563,7 +563,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                   )}
                 </div>
 
-                {/* Grid of Time Slots with Real-Time Busy Locks */}
+                {/* Grid of Time Slots with Real-Time Busy Locks & 44px Touch Targets */}
                 <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
                   {TIME_SLOTS.map(t => {
                     const isBusy = busySlots.includes(t);
@@ -574,22 +574,25 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                         key={t}
                         type="button"
                         disabled={isBusy}
-                        onClick={() => setSelectedTime(t)}
-                        className={`p-2 rounded-xl text-xs font-mono font-bold transition flex flex-col items-center justify-center relative ${
+                        onClick={() => {
+                          triggerHaptic('selection');
+                          setSelectedTime(t);
+                        }}
+                        className={`min-h-[44px] p-2 rounded-xl text-xs font-mono tabular-nums font-bold transition-all duration-150 flex flex-col items-center justify-center relative active:scale-[0.98] ${
                           isBusy
                             ? 'bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 text-rose-400 dark:text-rose-600 cursor-not-allowed opacity-60'
                             : isSelected
-                            ? 'bg-[#112E24] dark:bg-[#C5A880] text-[#FAF8F5] dark:text-[#07130F] ring-2 ring-[#C5A880] shadow-sm scale-95'
+                            ? 'bg-[#112E24] dark:bg-[#C5A880] text-[#FAF8F5] dark:text-[#07130F] ring-2 ring-[#C5A880] shadow-luxury-sm scale-95'
                             : 'bg-[#FAF8F5] dark:bg-[#0E231B] border border-[#E8E2D8] dark:border-[#C5A880]/20 text-[#1A221E] dark:text-[#FAF8F5] hover:border-[#C5A880]'
                         }`}
                       >
                         <span>{t}</span>
                         {isBusy ? (
-                          <span className="text-[8px] font-bold text-rose-600 dark:text-rose-400 flex items-center gap-0.5 mt-0.5">
+                          <span className="text-[8px] font-bold text-rose-600 dark:text-rose-400 flex items-center gap-0.5 mt-0.5 font-sans">
                             <Lock className="w-2.5 h-2.5 inline" /> {lang === 'uz' ? 'Band' : 'Занято'}
                           </span>
                         ) : (
-                          <span className="text-[8px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">
+                          <span className="text-[8px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5 font-sans">
                             {lang === 'uz' ? 'Bo\'sh' : 'Свободно'}
                           </span>
                         )}
@@ -709,8 +712,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 </div>
                 <div className="flex justify-between pt-2 border-t border-[#E8E2D8] dark:border-[#C5A880]/20 text-sm">
                   <span className="font-semibold text-[#1A221E] dark:text-[#FAF8F5]">{lang === 'uz' ? 'Narx:' : 'Стоимость:'}</span>
-                  <span className="font-serif font-bold text-base text-[#112E24] dark:text-[#C5A880]">
-                    {service.price.toLocaleString('uz-UZ')} {lang === 'uz' ? 'so\'m' : 'сум'}
+                  <span className="font-mono tabular-nums font-bold text-base text-[#112E24] dark:text-[#C5A880]">
+                    {service.price.toLocaleString('uz-UZ')} <span className="font-sans text-xs font-normal text-[#627068] dark:text-[#9FB1A7]">{lang === 'uz' ? 'so\'m' : 'сум'}</span>
                   </span>
                 </div>
               </div>
@@ -718,12 +721,15 @@ export const BookingModal: React.FC<BookingModalProps> = ({
           )}
         </div>
 
-        {/* Modal Footer / Navigation Buttons */}
-        <div className="p-4 bg-[#FAF8F5] dark:bg-[#07130F] border-t border-[#E8E2D8] dark:border-[#C5A880]/20 flex items-center justify-between gap-2">
+        {/* Modal Footer / Navigation Buttons with 44px min touch target */}
+        <div className="p-4 bg-[#FAF8F5] dark:bg-[#07130F] border-t border-[#E8E2D8] dark:border-[#C5A880]/20 flex items-center justify-between gap-2 pb-safe">
           {step > 1 ? (
             <button
-              onClick={() => setStep(step - 1)}
-              className="flex items-center gap-1 bg-white dark:bg-[#0E231B] border border-[#E8E2D8] dark:border-[#C5A880]/20 hover:border-[#C5A880] px-4 py-2 rounded-full text-xs font-semibold text-[#1A221E] dark:text-[#FAF8F5] transition"
+              onClick={() => {
+                triggerHaptic('light');
+                setStep(step - 1);
+              }}
+              className="min-h-[44px] flex items-center gap-1 bg-white dark:bg-[#0E231B] border border-[#E8E2D8] dark:border-[#C5A880]/20 hover:border-[#C5A880] px-4 py-2.5 rounded-full text-xs font-semibold text-[#1A221E] dark:text-[#FAF8F5] transition-all duration-150 active:scale-[0.98]"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>{lang === 'uz' ? 'Orqaga' : 'Назад'}</span>
@@ -732,8 +738,11 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
           {step < 3 ? (
             <button
-              onClick={() => setStep(step + 1)}
-              className="flex items-center gap-1.5 bg-[#112E24] hover:bg-[#183F32] dark:bg-[#C5A880] dark:hover:bg-[#B39366] text-[#FAF8F5] dark:text-[#07130F] px-5 py-2 rounded-full text-xs font-semibold tracking-wide border border-[#C5A880]/40 shadow-sm transition active:scale-95"
+              onClick={() => {
+                triggerHaptic('selection');
+                setStep(step + 1);
+              }}
+              className="min-h-[44px] flex items-center gap-1.5 bg-[#112E24] hover:bg-[#183F32] dark:bg-[#C5A880] dark:hover:bg-[#B39366] text-[#FAF8F5] dark:text-[#07130F] px-6 py-2.5 rounded-full text-xs font-semibold tracking-wide border border-[#C5A880]/40 shadow-luxury-sm hover:shadow-luxury-md transition-all duration-150 active:scale-[0.98]"
             >
               <span>{lang === 'uz' ? 'Davom etish' : 'Далее'}</span>
               <ArrowRight className="w-3.5 h-3.5 text-[#C5A880] dark:text-[#07130F]" />
@@ -742,7 +751,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
             <button
               onClick={handleConfirm}
               disabled={isSubmitting}
-              className={`flex items-center gap-1.5 bg-[#112E24] hover:bg-[#183F32] dark:bg-[#C5A880] dark:hover:bg-[#B39366] text-[#FAF8F5] dark:text-[#07130F] px-5 py-2.5 rounded-full text-xs font-semibold tracking-wide border border-[#C5A880]/40 shadow-md transition active:scale-95 ${
+              className={`min-h-[44px] flex items-center gap-2 bg-[#112E24] hover:bg-[#183F32] dark:bg-[#C5A880] dark:hover:bg-[#B39366] text-[#FAF8F5] dark:text-[#07130F] px-6 py-2.5 rounded-full text-xs font-bold tracking-wide border border-[#C5A880]/40 shadow-luxury-sm hover:shadow-luxury-md transition-all duration-150 active:scale-[0.98] ${
                 isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
               }`}
             >

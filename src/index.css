@@ -12,13 +12,54 @@
   }
 
   html.dark body {
-    background-color: #07130F;
+    background-color: #050608;
     color: #FAF8F5;
   }
 
   h1, h2, h3, .font-editorial {
     font-family: 'Playfair Display', Georgia, serif;
+    letter-spacing: -0.02em;
   }
+
+  /* Strict Tabular Numbers for financial balance and medical stats */
+  .tabular-nums, [data-tabular="true"] {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+}
+
+/* 44x44px minimum touch target for mobile ergonomics */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Telegram / iOS safe area insets */
+.pb-safe {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 16px));
+}
+.pt-safe {
+  padding-top: max(1rem, env(safe-area-inset-top, 16px));
+}
+
+/* Shimmer Skeleton Gradient Effect */
+.shimmer-bg {
+  background: linear-gradient(
+    90deg,
+    rgba(232, 226, 216, 0.3) 0%,
+    rgba(255, 255, 255, 0.7) 50%,
+    rgba(232, 226, 216, 0.3) 100%
+  );
+  background-size: 200% 100%;
+}
+html.dark .shimmer-bg {
+  background: linear-gradient(
+    90deg,
+    rgba(24, 63, 50, 0.2) 0%,
+    rgba(197, 168, 128, 0.15) 50%,
+    rgba(24, 63, 50, 0.2) 100%
+  );
+  background-size: 200% 100%;
 }
 
 /* Custom scrollbar */
@@ -30,7 +71,7 @@
   background: #FAF8F5;
 }
 html.dark ::-webkit-scrollbar-track {
-  background: #07130F;
+  background: #050608;
 }
 ::-webkit-scrollbar-thumb {
   background: #D8CFBF;
@@ -53,14 +94,14 @@ html.dark ::-webkit-scrollbar-thumb:hover {
 }
 
 html.dark .glass-luxury {
-  background: rgba(14, 35, 27, 0.88);
+  background: rgba(11, 31, 24, 0.88);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(197, 168, 128, 0.2);
 }
 
 .glass-dark {
-  background: rgba(17, 46, 36, 0.85);
+  background: rgba(5, 6, 8, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(197, 168, 128, 0.25);
