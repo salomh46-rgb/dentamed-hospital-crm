@@ -59,7 +59,21 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   day4.setDate(now.getDate() + 4);
   const day4Str = formatDateISO(day4);
 
-  const [selectedDate, setSelectedDate] = useState<string>(todayStr);
+  // Clinic working hours: 08:00 – 18:00 (Asia/Tashkent UTC+5)
+  // Online booking cutoff: 17:30 (last slot is 17:00, needs 30 min buffer)
+  const CLINIC_OPEN_HOUR = 8;
+  const CLINIC_CLOSE_HOUR = 17;
+  const CLINIC_CLOSE_MINUTE = 30;
+  const nowHour = now.getHours();
+  const nowMinute = now.getMinutes();
+  const isTodayClosed =
+    nowHour > CLINIC_CLOSE_HOUR ||
+    (nowHour === CLINIC_CLOSE_HOUR && nowMinute >= CLINIC_CLOSE_MINUTE) ||
+    nowHour < CLINIC_OPEN_HOUR;
+
+  const [selectedDate, setSelectedDate] = useState<string>(() =>
+    isTodayClosed ? tomorrowStr : todayStr
+  );
   const [selectedTime, setSelectedTime] = useState<string>(TIME_SLOTS[2]); // '10:30'
 
   // Dual-Track Department: Dental vs ENT/LOR
@@ -110,12 +124,16 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   const quickDates = [
     {
       date: todayStr,
-      label: { uz: 'Bugun (Tezkor)', ru: 'Сегодня (Срочно)' },
+      label: {
+        uz: isTodayClosed ? 'Bugun (Yopiq)' : 'Bugun (Tezkor)',
+        ru: isTodayClosed ? 'Сегодня (Закрыто)' : 'Сегодня (Срочно)'
+      },
       weekday: {
         uz: now.toLocaleDateString('uz-UZ', { weekday: 'short', month: 'numeric', day: 'numeric' }),
         ru: now.toLocaleDateString('ru-RU', { weekday: 'short', month: 'numeric', day: 'numeric' })
       },
-      isHot: true
+      isHot: !isTodayClosed,
+      disabled: isTodayClosed
     },
     {
       date: tomorrowStr,
@@ -123,7 +141,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       weekday: {
         uz: tomorrow.toLocaleDateString('uz-UZ', { weekday: 'short', month: 'numeric', day: 'numeric' }),
         ru: tomorrow.toLocaleDateString('ru-RU', { weekday: 'short', month: 'numeric', day: 'numeric' })
-      }
+      },
+      disabled: false
     },
     {
       date: dayAfterStr,
@@ -131,7 +150,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       weekday: {
         uz: dayAfter.toLocaleDateString('uz-UZ', { weekday: 'short', month: 'numeric', day: 'numeric' }),
         ru: dayAfter.toLocaleDateString('ru-RU', { weekday: 'short', month: 'numeric', day: 'numeric' })
-      }
+      },
+      disabled: false
     },
     {
       date: day3Str,
@@ -142,7 +162,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       weekday: {
         uz: day3.toLocaleDateString('uz-UZ', { month: 'numeric', day: 'numeric' }),
         ru: day3.toLocaleDateString('ru-RU', { month: 'numeric', day: 'numeric' })
-      }
+      },
+      disabled: false
     },
     {
       date: day4Str,
@@ -153,17 +174,23 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       weekday: {
         uz: day4.toLocaleDateString('uz-UZ', { month: 'numeric', day: 'numeric' }),
         ru: day4.toLocaleDateString('ru-RU', { month: 'numeric', day: 'numeric' })
-      }
+      },
+      disabled: false
     }
   ];
 
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
+  // Phone validation: Uzbekistan +998 XX XXX XX XX
+  const isPhoneValid = (p: string) => p.replace(/\D/g, '').length >= 12;
+
   const handlePhoneChange = (val: string) => {
-    if (!val.startsWith('+998')) {
+    // Strip non-numeric except leading +998 prefix
+    const stripped = val.replace(/[^\d+\s]/g, '');
+    if (!stripped.startsWith('+998')) {
       setPhone('+998 ');
     } else {
-      setPhone(val);
+      setPhone(stripped);
     }
   };
 
@@ -172,8 +199,12 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       showTelegramAlert(lang === 'uz' ? 'Iltimos, ismingizni kiriting!' : 'Пожалуйста, введите ваше имя!');
       return;
     }
-    if (phone.trim().length < 13) {
-      showTelegramAlert(lang === 'uz' ? 'Iltimos, telefon raqamingizni to\'liq kiriting!' : 'Пожалуйста, введите полный номер телефона!');
+    if (!isPhoneValid(phone)) {
+      showTelegramAlert(
+        lang === 'uz'
+          ? "Iltimos, telefon raqamini to'liq kiriting! (+998 XX XXX XX XX)"
+          : 'Пожалуйста, введите полный номер телефона! (+998 XX XXX XX XX)'
+      );
       return;
     }
 
@@ -462,21 +493,30 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2.5">
                   {quickDates.map(item => {
                     const isSelected = selectedDate === item.date;
+                    const isDisabled = item.disabled;
                     return (
                       <button
                         key={item.date}
                         type="button"
-                        onClick={() => setSelectedDate(item.date)}
+                        disabled={isDisabled}
+                        onClick={() => !isDisabled && setSelectedDate(item.date)}
                         className={`p-2 rounded-2xl border text-left transition active:scale-95 flex flex-col justify-between ${
-                          isSelected
+                          isDisabled
+                            ? 'border-[#E8E2D8] dark:border-[#183F32] bg-[#F0EDE8] dark:bg-[#0E1A15] text-[#B0A898] dark:text-[#4A5E55] cursor-not-allowed opacity-60'
+                            : isSelected
                             ? 'border-[#C5A880] bg-[#112E24] dark:bg-[#C5A880] text-[#FAF8F5] dark:text-[#07130F] shadow-sm font-semibold'
                             : 'border-[#E8E2D8] dark:border-[#C5A880]/20 bg-[#FAF8F5] dark:bg-[#0E231B] hover:border-[#C5A880] text-[#1A221E] dark:text-[#FAF8F5]'
                         }`}
                       >
-                        <span className={`text-[10px] ${isSelected ? 'text-[#D6BF9F] dark:text-[#332211]' : 'text-[#627068] dark:text-[#9FB1A7]'}`}>
+                        <span className={`text-[10px] ${
+                          isDisabled ? 'text-[#B0A898] dark:text-[#4A5E55]'
+                          : isSelected ? 'text-[#D6BF9F] dark:text-[#332211]'
+                          : 'text-[#627068] dark:text-[#9FB1A7]'
+                        }`}>
                           {lang === 'uz' ? item.weekday.uz : item.weekday.ru}
                         </span>
-                        <span className="text-xs font-bold mt-0.5">
+                        <span className="text-xs font-bold mt-0.5 flex items-center gap-1">
+                          {isDisabled && <Lock className="w-2.5 h-2.5 inline" />}
                           {lang === 'uz' ? item.label.uz : item.label.ru}
                         </span>
                       </button>

@@ -117,6 +117,26 @@ export function App() {
   const [isStaffModalOpen, setIsStaffModalOpen] = useState<boolean>(false);
   const [staffPin, setStaffPin] = useState<string>('');
   const [staffPinError, setStaffPinError] = useState<string | null>(null);
+  const [pinAttempts, setPinAttempts] = useState<number>(0);
+  const [lockUntil, setLockUntil] = useState<number>(0); // timestamp ms
+  const [lockSecondsLeft, setLockSecondsLeft] = useState<number>(0);
+
+  // Countdown timer for lockout
+  useEffect(() => {
+    if (lockUntil <= 0) return;
+    const interval = setInterval(() => {
+      const left = Math.ceil((lockUntil - Date.now()) / 1000);
+      if (left <= 0) {
+        setLockUntil(0);
+        setLockSecondsLeft(0);
+        setPinAttempts(0);
+        clearInterval(interval);
+      } else {
+        setLockSecondsLeft(left);
+      }
+    }, 500);
+    return () => clearInterval(interval);
+  }, [lockUntil]);
 
   const handleToggleStaff = () => {
     if (isStaff) {
@@ -137,8 +157,21 @@ export function App() {
 
   const handleVerifyStaffPin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Brute-force guard
+    if (Date.now() < lockUntil) {
+      setStaffPinError(
+        lang === 'uz'
+          ? `🔒 Juda ko'p xato urinish. ${lockSecondsLeft} soniyadan so'ng qaytadan urinib ko'ring.`
+          : `🔒 Слишком много попыток. Попробуйте через ${lockSecondsLeft} сек.`
+      );
+      return;
+    }
+
     const res = await loginStaff(staffPin);
     if (res.ok && res.session) {
+      setPinAttempts(0);
+      setLockUntil(0);
       setIsStaff(true);
       setStaffSession(res.session);
       localStorage.setItem('dentamed_is_staff', 'true');
@@ -161,7 +194,25 @@ export function App() {
         showToast(lang === 'uz' ? "Xush kelibsiz! Hospital CRM portali faol" : "Добро пожаловать! Портал управления активен");
       }
     } else {
-      setStaffPinError(res.error || (lang === 'uz' ? "Noto'g'ri PIN-kod! Iltimos, qaytadan urinib ko'ring." : "Неверный PIN-код! Попробуйте снова."));
+      const newAttempts = pinAttempts + 1;
+      setPinAttempts(newAttempts);
+      if (newAttempts >= 3) {
+        const until = Date.now() + 60_000; // 60 seconds
+        setLockUntil(until);
+        setLockSecondsLeft(60);
+        setStaffPinError(
+          lang === 'uz'
+            ? '🔒 3 ta noto\'g\'ri urinish! 60 soniya kuting.'
+            : '🔒 3 неверные попытки! Подождите 60 секунд.'
+        );
+      } else {
+        setStaffPinError(
+          res.error ||
+          (lang === 'uz'
+            ? `Noto'g'ri PIN-kod! ${3 - newAttempts} ta urinish qoldi.`
+            : `Неверный PIN-код! Осталось попыток: ${3 - newAttempts}.`)
+        );
+      }
     }
   };
 
@@ -668,9 +719,16 @@ export function App() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 rounded-full bg-[#112E24] dark:bg-[#C5A880] text-[#FAF8F5] dark:text-[#07130F] text-xs font-bold hover:bg-[#183F32] dark:hover:bg-[#D6BF9F] transition shadow-md"
+                  disabled={Date.now() < lockUntil}
+                  className={`flex-1 py-2.5 rounded-full text-xs font-bold transition shadow-md ${
+                    Date.now() < lockUntil
+                      ? 'bg-rose-200 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 cursor-not-allowed'
+                      : 'bg-[#112E24] dark:bg-[#C5A880] text-[#FAF8F5] dark:text-[#07130F] hover:bg-[#183F32] dark:hover:bg-[#D6BF9F]'
+                  }`}
                 >
-                  {lang === 'uz' ? 'Kirish' : 'Войти'}
+                  {Date.now() < lockUntil
+                    ? `🔒 ${lockSecondsLeft}s`
+                    : (lang === 'uz' ? 'Kirish' : 'Войти')}
                 </button>
               </div>
             </form>
