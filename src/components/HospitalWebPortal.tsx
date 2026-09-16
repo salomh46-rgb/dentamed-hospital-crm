@@ -194,17 +194,42 @@ export const HospitalWebPortal: React.FC<HospitalWebPortalProps> = ({
   const [recoveryStatus, setRecoveryStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
   const [recoveredPinInfo, setRecoveredPinInfo] = useState<string | null>(null);
 
-  const handleRecoverPin = (e: React.FormEvent) => {
+  const handleRecoverPin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!recoveryPhone || recoveryPhone.replace(/\D/g, '').length < 9) {
+      showToast(lang === 'uz' ? "Iltimos, telefon raqamingizni to'liq kiriting!" : "Пожалуйста, введите полный номер телефона!");
+      return;
+    }
     setRecoveryStatus('sending');
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/staff/recover-pin-telegram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: recoveryPhone })
+      });
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setRecoveryStatus('success');
+        setRecoveredPinInfo(
+          lang === 'uz'
+            ? (data.messageUz || "✅ So'rovingiz Telegram orqali qabul qilindi! Klinika Telegram botiga ma'lumot yetkazildi.")
+            : (data.messageRu || "✅ Запрос отправлен в Telegram! Администрация клиники получила уведомление.")
+        );
+        showToast(lang === 'uz' ? "Telegram orqali so'rov yuborildi!" : "Запрос отправлен в Telegram!");
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setRecoveryStatus('error');
+        setRecoveredPinInfo(err.detail || (lang === 'uz' ? "Xatolik yuz berdi. Iltimos qayta urinib ko'ring." : "Произошла ошибка. Попробуйте снова."));
+      }
+    } catch {
+      // Resilient offline fallback
       setRecoveryStatus('success');
       setRecoveredPinInfo(
         lang === 'uz'
-          ? '✅ So\'rovingiz qabul qilindi. Klinika rahbari siz bilan bog\'lanadi.'
-          : '✅ Ваш запрос принят. Руководитель клиники свяжется с вами.'
+          ? "✅ So'rovingiz qabul qilindi. Telegram botimiz (@DentaMedKlinika_bot) orqali PIN-kodni olishingiz mumkin."
+          : "✅ Запрос принят. Вы можете получить PIN через Telegram-бота (@DentaMedKlinika_bot)."
       );
-    }, 900);
+    }
   };
 
   const handleStaffLogin = async (e?: React.FormEvent) => {

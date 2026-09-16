@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Language } from '../../types';
 import { Key, Lock, Phone, X } from 'lucide-react';
 
@@ -108,17 +108,22 @@ export const PinLoginModal: React.FC<PinLoginModalProps> = ({
             </button>
           </div>
 
-          {/* Emergency PIN Recovery Box */}
+          {/* Emergency PIN Recovery Box via Telegram */}
           {isForgotPinOpen && (
             <div className="p-3.5 rounded-2xl bg-gray-50 dark:bg-[#07130F] border border-gray-200 dark:border-gray-800 space-y-2.5 animate-fade-in text-xs">
               <div className="font-bold text-[#112E24] dark:text-[#FAF8F5] flex items-center justify-between">
-                <span>{lang === 'uz' ? 'SMS orqali PINni tiklash' : 'Восстановление PIN по SMS'}</span>
-                <span className="text-[10px] text-gray-500">(Tezkor yordam)</span>
+                <span className="flex items-center gap-1.5">
+                  <span className="text-base">✈️</span>
+                  <span>{lang === 'uz' ? 'Telegram orqali PINni olish' : 'Получение PIN через Telegram'}</span>
+                </span>
+                <span className="text-[10px] text-[#229ED9] font-semibold bg-[#229ED9]/10 px-2 py-0.5 rounded-full">
+                  Tezkor
+                </span>
               </div>
               <p className="text-[11px] text-gray-500">
                 {lang === 'uz'
-                  ? "Klinikada ro'yxatdan o'tgan telefon raqamingizni kiriting. Tizim sizga zudlik bilan SMS yuboradi."
-                  : "Введите номер телефона, зарегистрированный в клинике. Система отправит SMS."}
+                  ? "Klinikada ro'yxatdan o'tgan telefon raqamingizni kiriting. Tizim sizni tasdiqlab, Telegram orqali PIN-kodni taqdim etadi."
+                  : "Введите номер телефона, зарегистрированный в клинике. Система подтвердит и предоставит PIN через Telegram."}
               </p>
               <div className="flex gap-1.5">
                 <input
@@ -132,11 +137,23 @@ export const PinLoginModal: React.FC<PinLoginModalProps> = ({
                   type="button"
                   onClick={onRecoverPin}
                   disabled={recoveryStatus === 'sending'}
-                  className="px-3.5 py-2.5 bg-[#112E24] dark:bg-[#C5A880] text-[#FAF8F5] dark:text-[#07130F] font-bold text-xs rounded-xl shadow hover:scale-95 transition"
+                  className="px-3.5 py-2.5 bg-[#229ED9] hover:bg-[#1E88E5] text-white font-bold text-xs rounded-xl shadow hover:scale-95 transition flex items-center gap-1.5"
                 >
-                  {recoveryStatus === 'sending' ? (lang === 'uz' ? 'Yuborilmoqda...' : 'Отправка...') : (lang === 'uz' ? 'SMS Yuborish' : 'Выслать SMS')}
+                  <span>✈️</span>
+                  <span>{recoveryStatus === 'sending' ? (lang === 'uz' ? 'Yuborilmoqda...' : 'Отправка...') : (lang === 'uz' ? 'Telegramdan olish' : 'В Telegram')}</span>
                 </button>
               </div>
+
+              {/* Instant Bot Direct Link */}
+              <a
+                href="https://t.me/DentaMedKlinika_bot?start=pin"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-1.5 w-full py-2 px-3 rounded-xl bg-[#229ED9]/10 hover:bg-[#229ED9]/20 text-[#229ED9] text-[11px] font-bold border border-[#229ED9]/30 transition"
+              >
+                <span>🤖</span>
+                <span>{lang === 'uz' ? 'Telegram Botda darhol ochish (@DentaMedKlinika_bot)' : 'Открыть в Telegram боте'}</span>
+              </a>
 
               {recoveredPinInfo && (
                 <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-[11px] font-medium animate-fade-in">
