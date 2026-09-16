@@ -172,55 +172,13 @@ export async function loginStaff(pin: string): Promise<{ ok: boolean; session?: 
     console.warn('Backend staff login unreachable, applying secure offline fallback', e);
   }
 
-  // Resilient Client-side & Offline RBAC Fallback
-  // 1. DentaMed Klinika Rahbari (Director of all 5 DentaMed branches)
-  if (cleanPin === '7777') {
-    const session: StaffSession = {
-      role: 'clinic_director',
-      tenantId: 'dentamed',
-      staffName: 'Dr. Jamshid Rustamov',
-      titleUz: '👑 DentaMed Rahbari (Barcha 5 ta filial)',
-      titleRu: '👑 Руководитель DentaMed (Все 5 филиалов)',
-      isDirector: true,
-      allowedClinicIds: ['nukus', 'chilonzor', 'yunusobod', 'samarqand', 'buxoro']
-    };
-    return { ok: true, session };
-  }
-
-  // 2. GrandMed International Rahbari (Director of GrandMed branches)
-  if (cleanPin === '8888' || cleanPin === '9999') {
-    const session: StaffSession = {
-      role: 'clinic_director',
-      tenantId: 'grandmed',
-      staffName: 'Dr. Alisher Vohidov',
-      titleUz: '👑 GrandMed Rahbari (Barcha filiallar)',
-      titleRu: '👑 Руководитель GrandMed (Все филиалы)',
-      isDirector: true,
-      allowedClinicIds: ['grandmed-markaziy', 'grandmed-sergeli']
-    };
-    return { ok: true, session };
-  }
-
-  // 3. Super Admin
-  if (cleanPin === '2026' || cleanPin === '0000') {
-    const session: StaffSession = {
-      role: 'super_admin',
-      tenantId: 'all',
-      staffName: 'Bosh Tizim Administratori',
-      titleUz: '💎 Bosh Administrator (Barcha Klinikalar)',
-      titleRu: '💎 Главный Администратор (Все клиники)',
-      isDirector: true,
-      allowedClinicIds: CLINICS.map(c => c.id)
-    };
-    return { ok: true, session };
-  }
-
-  // 4. Check dynamic registered tenants from localStorage
+  // Offline Fallback: Check dynamic registered tenants from localStorage
   const allTenants = getStoredTenants();
   const allClinics = getStoredClinics();
 
   for (const t of allTenants) {
-    if ((t as any).ownerPin && String((t as any).ownerPin).trim() === cleanPin) {
+    const ownerPin = (t as any).ownerPin ? String((t as any).ownerPin).trim() : '';
+    if (ownerPin && ownerPin === cleanPin) {
       const branches = allClinics.filter(c => c.tenantId === t.id);
       const session: StaffSession = {
         role: 'clinic_director',
@@ -235,7 +193,7 @@ export async function loginStaff(pin: string): Promise<{ ok: boolean; session?: 
     }
   }
 
-  // 5. Check Branch Staff PINs (Receptionists)
+  // Check Branch Staff PINs (Receptionists)
   const matchedBranch = allClinics.find(c => c.staffPin === cleanPin);
   if (matchedBranch) {
     const session: StaffSession = {
@@ -253,7 +211,7 @@ export async function loginStaff(pin: string): Promise<{ ok: boolean; session?: 
 
   return {
     ok: false,
-    error: "Noto'g'ri PIN-kod! (Rahbar: 7777 / 8888, Nukus: 1001, Chilonzor: 1002, GrandMed: 2001)"
+    error: "Noto'g'ri PIN-kod! Iltimos, qaytadan urinib ko'ring."
   };
 }
 

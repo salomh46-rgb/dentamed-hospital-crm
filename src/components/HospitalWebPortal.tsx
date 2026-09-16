@@ -198,26 +198,12 @@ export const HospitalWebPortal: React.FC<HospitalWebPortalProps> = ({
     e.preventDefault();
     setRecoveryStatus('sending');
     setTimeout(() => {
-      const clean = recoveryPhone.replace(/\D/g, '');
-      let foundPin = '1001';
-      let foundRole = lang === 'uz' ? 'Nukus Bosh Filiali Retsepshni' : 'Ресепшн филиала Нукус';
-      
-      if (clean.includes('7777') || clean.endsWith('77') || clean.endsWith('00')) {
-        foundPin = '7777';
-        foundRole = lang === 'uz' ? 'DentaMed Bosh Rahbari (CEO)' : 'Руководитель DentaMed';
-      } else if (clean.includes('8888') || clean.endsWith('88')) {
-        foundPin = '8888';
-        foundRole = lang === 'uz' ? 'GrandMed Bosh Rahbari (CEO)' : 'Руководитель GrandMed';
-      } else if (clean.endsWith('02') || clean.endsWith('22')) {
-        foundPin = '1002';
-        foundRole = lang === 'uz' ? 'Chilonzor Filiali Retsepshni' : 'Ресепшн филиала Чиланзар';
-      }
-
       setRecoveryStatus('success');
-      setRecoveredPinInfo(`✅ Hurmatli shifokor/xodim, SMS yuborildi! Sizning PIN-kodingiz: ${foundPin} (${foundRole}). PIN avtomatik kiritildi.`);
-      setLoginPin(foundPin);
-      setLoginError(null);
-      showToast(lang === 'uz' ? `SMS xabarnoma yuborildi! PIN: ${foundPin}` : `SMS отправлен! PIN: ${foundPin}`);
+      setRecoveredPinInfo(
+        lang === 'uz'
+          ? '✅ So\'rovingiz qabul qilindi. Klinika rahbari siz bilan bog\'lanadi.'
+          : '✅ Ваш запрос принят. Руководитель клиники свяжется с вами.'
+      );
     }, 900);
   };
 
@@ -244,7 +230,7 @@ export const HospitalWebPortal: React.FC<HospitalWebPortalProps> = ({
       }
       showToast(lang === 'uz' ? `Xush kelibsiz! ${res.session.titleUz} portali faol` : `Добро пожаловать! ${res.session.titleRu}`);
     } else {
-      setLoginError(res.error || (lang === 'uz' ? "Noto'g'ri PIN-kod! (Rahbar: 7777 / 8888, Nukus: 1001)" : "Неверный PIN-код!"));
+      setLoginError(res.error || (lang === 'uz' ? "Noto'g'ri PIN-kod! Iltimos, qaytadan urinib ko'ring." : "Неверный PIN-код! Попробуйте снова."));
     }
   };
 
