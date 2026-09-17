@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Receipt, X, Lock, Plus, Check, Printer } from 'lucide-react';
 import { Shift, ZReportSummary, Tenant } from '../../types';
 
@@ -202,7 +202,7 @@ export const ShiftZReportModal: React.FC<ShiftZReportModalProps> = ({
                     </div>
                   </div>
                   <div className="p-3 rounded-xl bg-[#FAF8F5] dark:bg-[#07130F] border border-[#E8E2D8] dark:border-[#183F32]">
-                    <div className="text-[10px] text-gray-500 uppercase font-bold">Karta (Terminal)</div>
+                    <div className="text-[10px] text-gray-500 uppercase font-bold">Uzcard / Humo (Terminal)</div>
                     <div className="font-mono text-sm font-black text-blue-600 dark:text-blue-400 mt-0.5">
                       {(shiftLiveStats?.card || 0).toLocaleString('uz-UZ')} UZS
                     </div>

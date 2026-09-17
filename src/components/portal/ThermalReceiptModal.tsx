@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Appointment, Tenant, Clinic, Language } from '../../types';
 import { Printer, X, Receipt } from 'lucide-react';
 
@@ -100,9 +100,9 @@ export const ThermalReceiptModal: React.FC<ThermalReceiptModalProps> = ({
               onChange={e => setPaymentMethod(e.target.value as any)}
               className="w-full py-1.5 px-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0E231B] text-xs font-semibold"
             >
-              <option value="cash">Naqd Pul</option>
-              <option value="card">Bank Kartasi (Terminal)</option>
-              <option value="click">Click / Payme (Online)</option>
+              <option value="cash">💵 Naqd Pul</option>
+              <option value="card">💳 Bank Kartasi (Uzcard / Humo Terminal)</option>
+              <option value="click">📲 Click / Payme (Online QR)</option>
             </select>
           </div>
         </div>
@@ -182,7 +182,13 @@ export const ThermalReceiptModal: React.FC<ThermalReceiptModalProps> = ({
               </div>
               <div className="flex justify-between text-[10px]">
                 <span>To'lov turi:</span>
-                <span className="uppercase font-bold">{paymentMethod}</span>
+                <span className="uppercase font-bold">
+                  {paymentMethod === 'card'
+                    ? 'UZCARD / HUMO (TERMINAL)'
+                    : paymentMethod === 'cash'
+                    ? 'NAQD PUL'
+                    : 'CLICK / PAYME (ONLINE QR)'}
+                </span>
               </div>
               <div className="flex justify-between text-[9px] text-gray-600">
                 <span>QQS (0% Tibbiyot):</span>
