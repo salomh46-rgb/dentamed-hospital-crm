@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Language } from '../../types';
 import { Sparkles, Shield, X, Copy, Check, ExternalLink, Crown } from 'lucide-react';
 
@@ -14,6 +14,8 @@ interface NewClinicWizardModalProps {
     email: string;
     firstBranchName: string;
     firstBranchAddress: string;
+    ownerPin?: string;
+    staffPin?: string;
   };
   setSignUpData: React.Dispatch<React.SetStateAction<any>>;
   signUpResult: {
@@ -174,10 +176,67 @@ export const NewClinicWizardModal: React.FC<NewClinicWizardModalProps> = ({
                   />
                 </div>
 
+                {/* Custom PINs with Randomizer */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-bold text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                        <span>👑 Rahbar PIN-kodi:</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const rand = Math.floor(1000 + Math.random() * 9000).toString();
+                          setSignUpData({ ...signUpData, ownerPin: rand });
+                        }}
+                        className="text-[10px] font-bold text-[#C5A880] hover:underline flex items-center gap-0.5"
+                      >
+                        <span>🎲 Tasodifiy</span>
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      maxLength={6}
+                      value={signUpData.ownerPin || ''}
+                      onChange={e => setSignUpData({ ...signUpData, ownerPin: e.target.value })}
+                      placeholder="Masalan: 7777"
+                      className="w-full p-2.5 rounded-xl border border-[#E8E2D8] dark:border-[#183F32] bg-[#FAF8F5] dark:bg-[#07130F] font-mono text-xs font-bold focus:outline-none focus:border-[#C5A880]"
+                    />
+                    <span className="text-[10px] text-gray-500 block mt-0.5">Direktor kabineti va kassa uchun</span>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-bold text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                        <span>👩‍💼 Retsepshn PIN-kodi:</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const rand = Math.floor(1000 + Math.random() * 9000).toString();
+                          setSignUpData({ ...signUpData, staffPin: rand });
+                        }}
+                        className="text-[10px] font-bold text-[#C5A880] hover:underline flex items-center gap-0.5"
+                      >
+                        <span>🎲 Tasodifiy</span>
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      maxLength={6}
+                      value={signUpData.staffPin || ''}
+                      onChange={e => setSignUpData({ ...signUpData, staffPin: e.target.value })}
+                      placeholder="Masalan: 1001"
+                      className="w-full p-2.5 rounded-xl border border-[#E8E2D8] dark:border-[#183F32] bg-[#FAF8F5] dark:bg-[#07130F] font-mono text-xs font-bold focus:outline-none focus:border-[#C5A880]"
+                    />
+                    <span className="text-[10px] text-gray-500 block mt-0.5">Administrator navbat oynasi uchun</span>
+                  </div>
+                </div>
+
                 <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-300/40 text-xs text-amber-900 dark:text-amber-200 flex items-center gap-2">
                   <Shield className="w-5 h-5 text-amber-600 shrink-0" />
                   <span>
-                    Tizim sizga <b>Rahbar Super PIN</b> va <b>Filial Retsepshn PIN</b> kodlarini avtomatik generatsiya qilib beradi!
+                    PIN-kodlarni o'zingiz kiritishingiz yoki <b>🎲 Tasodifiy</b> tugmasi orqali xavfsiz yaratib olishingiz mumkin!
                   </span>
                 </div>
               </div>

@@ -8,6 +8,8 @@ export interface TenantRegisterPayload {
   email?: string;
   firstBranchName?: string;
   firstBranchAddress?: string;
+  ownerPin?: string;
+  staffPin?: string;
 }
 
 export interface TenantRegisterResult {
@@ -92,8 +94,8 @@ export async function registerTenant(payload: TenantRegisterPayload): Promise<Te
 
   // 2. Client-side & Offline Resilient Generation
   const slug = payload.name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 12) || `tenant${Date.now().toString().slice(-4)}`;
-  const ownerPin = Math.floor(1000 + Math.random() * 9000).toString();
-  const staffPin = Math.floor(3000 + Math.random() * 1000).toString();
+  const ownerPin = payload.ownerPin?.trim() || Math.floor(1000 + Math.random() * 9000).toString();
+  const staffPin = payload.staffPin?.trim() || Math.floor(3000 + Math.random() * 1000).toString();
   const branchId = `${slug}-main`;
 
   const newTenant: Tenant = {

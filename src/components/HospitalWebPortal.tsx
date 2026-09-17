@@ -275,7 +275,9 @@ export const HospitalWebPortal: React.FC<HospitalWebPortalProps> = ({
     phone: '+998 ',
     email: '',
     firstBranchName: '',
-    firstBranchAddress: ''
+    firstBranchAddress: '',
+    ownerPin: '7777',
+    staffPin: '1001'
   });
   const [signUpResult, setSignUpResult] = useState<{
     tenantId: string;
@@ -316,7 +318,9 @@ export const HospitalWebPortal: React.FC<HospitalWebPortalProps> = ({
           phone: signUpData.phone,
           email: signUpData.email,
           firstBranchName: signUpData.firstBranchName,
-          firstBranchAddress: signUpData.firstBranchAddress
+          firstBranchAddress: signUpData.firstBranchAddress,
+          ownerPin: signUpData.ownerPin,
+          staffPin: signUpData.staffPin
         });
 
         if (res.ok && res.tenant && res.branch && res.ownerPin && res.staffPin) {

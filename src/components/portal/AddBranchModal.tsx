@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Building2, X, Plus } from 'lucide-react';
 
 interface AddBranchModalProps {
@@ -110,9 +110,21 @@ export const AddBranchModal: React.FC<AddBranchModalProps> = ({
           </div>
 
           <div>
-            <label className="text-xs font-bold text-gray-700 dark:text-gray-300 block mb-1">
-              Xodim Retsepshn PIN-kodi (Ixtiyoriy, avtomatik yaratiladi):
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                Xodim Retsepshn PIN-kodi:
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  const rand = Math.floor(1000 + Math.random() * 9000).toString();
+                  setNewBranchData({ ...newBranchData, staffPin: rand });
+                }}
+                className="text-[10px] font-bold text-[#C5A880] hover:underline flex items-center gap-0.5"
+              >
+                <span>🎲 Tasodifiy</span>
+              </button>
+            </div>
             <input
               type="text"
               maxLength={6}
