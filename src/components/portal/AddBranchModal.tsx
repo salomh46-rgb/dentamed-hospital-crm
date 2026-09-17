@@ -1,5 +1,6 @@
 import React from 'react';
-import { Building2, X, Plus } from 'lucide-react';
+import { Building2, X, Plus, AlertTriangle } from 'lucide-react';
+import { generateUniqueRandomPin, isPinAlreadyTaken } from '../../services/api';
 
 interface AddBranchModalProps {
   isOpen: boolean;
@@ -117,7 +118,7 @@ export const AddBranchModal: React.FC<AddBranchModalProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  const rand = Math.floor(1000 + Math.random() * 9000).toString();
+                  const rand = generateUniqueRandomPin();
                   setNewBranchData({ ...newBranchData, staffPin: rand });
                 }}
                 className="text-[10px] font-bold text-[#C5A880] hover:underline flex items-center gap-0.5"
@@ -131,8 +132,17 @@ export const AddBranchModal: React.FC<AddBranchModalProps> = ({
               value={newBranchData.staffPin}
               onChange={e => setNewBranchData({ ...newBranchData, staffPin: e.target.value })}
               placeholder="Masalan: 3002"
-              className="w-full p-2.5 rounded-xl border border-[#E8E2D8] dark:border-[#183F32] bg-[#FAF8F5] dark:bg-[#07130F] font-mono text-xs font-bold focus:outline-none focus:border-[#C5A880]"
+              className={`w-full p-2.5 rounded-xl border ${
+                newBranchData.staffPin && isPinAlreadyTaken(newBranchData.staffPin)
+                  ? 'border-rose-500 bg-rose-50/20 text-rose-600'
+                  : 'border-[#E8E2D8] dark:border-[#183F32] bg-[#FAF8F5] dark:bg-[#07130F] text-[#112E24] dark:text-[#FAF8F5]'
+              } font-mono text-xs font-bold focus:outline-none focus:border-[#C5A880]`}
             />
+            {newBranchData.staffPin && isPinAlreadyTaken(newBranchData.staffPin) && (
+              <span className="text-[10px] text-rose-500 font-bold block mt-0.5 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" /> Ushbu PIN allaqachon boshqa filialda band!
+              </span>
+            )}
           </div>
         </div>
 

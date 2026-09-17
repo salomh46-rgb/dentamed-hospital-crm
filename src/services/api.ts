@@ -67,6 +67,36 @@ export function addNewBranchLocally(branch: Clinic) {
   }
 }
 
+export function getAllExistingPins(): string[] {
+  const tenants = getStoredTenants();
+  const clinics = getStoredClinics();
+  const pins: string[] = ['7777'];
+  tenants.forEach((t: any) => {
+    if (t.ownerPin) pins.push(String(t.ownerPin).trim());
+  });
+  clinics.forEach((c: any) => {
+    if (c.staffPin) pins.push(String(c.staffPin).trim());
+  });
+  return Array.from(new Set(pins));
+}
+
+export function isPinAlreadyTaken(pin: string): boolean {
+  if (!pin || !pin.trim()) return false;
+  const clean = pin.trim();
+  return getAllExistingPins().includes(clean);
+}
+
+export function generateUniqueRandomPin(): string {
+  const existingPins = getAllExistingPins();
+  let candidate = '';
+  let attempts = 0;
+  do {
+    candidate = Math.floor(1000 + Math.random() * 9000).toString();
+    attempts++;
+  } while (existingPins.includes(candidate) && attempts < 200);
+  return candidate;
+}
+
 export async function registerTenant(payload: TenantRegisterPayload): Promise<TenantRegisterResult> {
   // 1. Try calling backend API
   try {
@@ -92,10 +122,18 @@ export async function registerTenant(payload: TenantRegisterPayload): Promise<Te
     console.warn('Backend tenant registration unreachable, using resilient offline wizard', e);
   }
 
-  // 2. Client-side & Offline Resilient Generation
+  // 2. Client-side & Offline Resilient Generation (Zero-Collision Invariant)
   const slug = payload.name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 12) || `tenant${Date.now().toString().slice(-4)}`;
-  const ownerPin = payload.ownerPin?.trim() || Math.floor(1000 + Math.random() * 9000).toString();
-  const staffPin = payload.staffPin?.trim() || Math.floor(3000 + Math.random() * 1000).toString();
+  let ownerPin = payload.ownerPin?.trim();
+  let staffPin = payload.staffPin?.trim();
+
+  // Enforce global uniqueness: If candidate PIN is already taken, generate fresh unique PIN
+  if (!ownerPin || isPinAlreadyTaken(ownerPin)) {
+    ownerPin = generateUniqueRandomPin();
+  }
+  if (!staffPin || isPinAlreadyTaken(staffPin) || staffPin === ownerPin) {
+    staffPin = generateUniqueRandomPin();
+  }
   const branchId = `${slug}-main`;
 
   const newTenant: Tenant = {

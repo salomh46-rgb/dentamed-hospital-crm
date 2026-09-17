@@ -1,6 +1,7 @@
 import React from 'react';
 import { Language } from '../../types';
-import { Sparkles, Shield, X, Copy, Check, ExternalLink, Crown } from 'lucide-react';
+import { Sparkles, Shield, X, Copy, Check, ExternalLink, Crown, AlertTriangle } from 'lucide-react';
+import { generateUniqueRandomPin, isPinAlreadyTaken } from '../../services/api';
 
 interface NewClinicWizardModalProps {
   isOpen: boolean;
@@ -176,7 +177,7 @@ export const NewClinicWizardModal: React.FC<NewClinicWizardModalProps> = ({
                   />
                 </div>
 
-                {/* Custom PINs with Randomizer */}
+                {/* Custom PINs with Randomizer & Collision Defense */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                   <div>
                     <div className="flex items-center justify-between mb-1">
@@ -186,7 +187,7 @@ export const NewClinicWizardModal: React.FC<NewClinicWizardModalProps> = ({
                       <button
                         type="button"
                         onClick={() => {
-                          const rand = Math.floor(1000 + Math.random() * 9000).toString();
+                          const rand = generateUniqueRandomPin();
                           setSignUpData({ ...signUpData, ownerPin: rand });
                         }}
                         className="text-[10px] font-bold text-[#C5A880] hover:underline flex items-center gap-0.5"
@@ -200,9 +201,19 @@ export const NewClinicWizardModal: React.FC<NewClinicWizardModalProps> = ({
                       value={signUpData.ownerPin || ''}
                       onChange={e => setSignUpData({ ...signUpData, ownerPin: e.target.value })}
                       placeholder="Masalan: 7777"
-                      className="w-full p-2.5 rounded-xl border border-[#E8E2D8] dark:border-[#183F32] bg-[#FAF8F5] dark:bg-[#07130F] font-mono text-xs font-bold focus:outline-none focus:border-[#C5A880]"
+                      className={`w-full p-2.5 rounded-xl border ${
+                        signUpData.ownerPin && isPinAlreadyTaken(signUpData.ownerPin)
+                          ? 'border-rose-500 bg-rose-50/20 text-rose-600'
+                          : 'border-[#E8E2D8] dark:border-[#183F32] bg-[#FAF8F5] dark:bg-[#07130F] text-[#112E24] dark:text-[#FAF8F5]'
+                      } font-mono text-xs font-bold focus:outline-none focus:border-[#C5A880]`}
                     />
-                    <span className="text-[10px] text-gray-500 block mt-0.5">Direktor kabineti va kassa uchun</span>
+                    {signUpData.ownerPin && isPinAlreadyTaken(signUpData.ownerPin) ? (
+                      <span className="text-[10px] text-rose-500 font-bold block mt-0.5 flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3" /> Ushbu PIN allaqachon band! Boshqa kod tanlang yoki 🎲 bosing.
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-gray-500 block mt-0.5">Direktor kabineti va kassa uchun</span>
+                    )}
                   </div>
 
                   <div>
@@ -213,7 +224,7 @@ export const NewClinicWizardModal: React.FC<NewClinicWizardModalProps> = ({
                       <button
                         type="button"
                         onClick={() => {
-                          const rand = Math.floor(1000 + Math.random() * 9000).toString();
+                          const rand = generateUniqueRandomPin();
                           setSignUpData({ ...signUpData, staffPin: rand });
                         }}
                         className="text-[10px] font-bold text-[#C5A880] hover:underline flex items-center gap-0.5"
@@ -227,9 +238,19 @@ export const NewClinicWizardModal: React.FC<NewClinicWizardModalProps> = ({
                       value={signUpData.staffPin || ''}
                       onChange={e => setSignUpData({ ...signUpData, staffPin: e.target.value })}
                       placeholder="Masalan: 1001"
-                      className="w-full p-2.5 rounded-xl border border-[#E8E2D8] dark:border-[#183F32] bg-[#FAF8F5] dark:bg-[#07130F] font-mono text-xs font-bold focus:outline-none focus:border-[#C5A880]"
+                      className={`w-full p-2.5 rounded-xl border ${
+                        signUpData.staffPin && (isPinAlreadyTaken(signUpData.staffPin) || signUpData.staffPin === signUpData.ownerPin)
+                          ? 'border-rose-500 bg-rose-50/20 text-rose-600'
+                          : 'border-[#E8E2D8] dark:border-[#183F32] bg-[#FAF8F5] dark:bg-[#07130F] text-[#112E24] dark:text-[#FAF8F5]'
+                      } font-mono text-xs font-bold focus:outline-none focus:border-[#C5A880]`}
                     />
-                    <span className="text-[10px] text-gray-500 block mt-0.5">Administrator navbat oynasi uchun</span>
+                    {signUpData.staffPin && (isPinAlreadyTaken(signUpData.staffPin) || signUpData.staffPin === signUpData.ownerPin) ? (
+                      <span className="text-[10px] text-rose-500 font-bold block mt-0.5 flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3" /> Ushbu PIN band yoki Rahbar PINi bilan bir xil!
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-gray-500 block mt-0.5">Administrator navbat oynasi uchun</span>
+                    )}
                   </div>
                 </div>
 
