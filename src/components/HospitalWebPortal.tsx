@@ -1079,55 +1079,101 @@ export const HospitalWebPortal: React.FC<HospitalWebPortalProps> = ({
         )}
 
         {activeTab === 'ceo_finance' && (
-          <CeoFinanceTab
-            currentTenant={currentTenant}
-            setIsAddBranchModalOpen={setIsAddBranchModalOpen}
-            lang={lang}
-            visibleBranches={visibleBranches}
-            financeKPIs={financeKPIs}
-            debtsList={debtsList}
-            loadDebtsData={loadDebtsData}
-            setSelectedDebt={setSelectedDebt}
-            setDebtPayAmount={setDebtPayAmount}
-            setIsDebtPayModalOpen={setIsDebtPayModalOpen}
-            tenantDoctors={tenantDoctors}
-            setEditingDoc={setEditingDoc}
-            setDocName={setDocName}
-            setDocSpecUz={setDocSpecUz}
-            setDocPhotoBase64={setDocPhotoBase64}
-            setIsDocModalOpen={setIsDocModalOpen}
-            setDocDept={setDocDept}
-            setDocExp={setDocExp}
-            handleDeleteDoctor={handleDeleteDoctor}
-            promoTitle={promoTitle}
-            setPromoTitle={setPromoTitle}
-            promoDiscount={promoDiscount}
-            setPromoDiscount={setPromoDiscount}
-            isPromoActive={isPromoActive}
-            setIsPromoActive={setIsPromoActive}
-            promoSaveSuccess={promoSaveSuccess}
-            setPromoSaveSuccess={setPromoSaveSuccess}
-          />
+          activeSession?.role === 'reception' ? (
+            <div className="bg-white dark:bg-[#0E231B] p-12 rounded-3xl border-2 border-rose-500/30 text-center space-y-4 max-w-xl mx-auto shadow-2xl animate-fade-in my-12">
+              <div className="w-16 h-16 rounded-3xl bg-rose-500/10 text-rose-500 mx-auto flex items-center justify-center text-3xl font-black">
+                🔒
+              </div>
+              <h3 className="font-serif font-bold text-xl text-[#112E24] dark:text-[#FAF8F5]">
+                {lang === 'uz' ? "Kirish Cheklangan (Faqat Rahbar Uchun)" : "Доступ Ограничен (Только для Руководства)"}
+              </h3>
+              <p className="text-xs text-gray-500 leading-relaxed">
+                {lang === 'uz'
+                  ? "Siz hozir Retsepshn (Administrator) hisobida turibsiz. Klinikaning moliyaviy hisobotlari, shifokorlar oylik ulushi va xodimlarni boshqarishga retsepshn xodimining kirishi qat'iyan taqiqlangan!"
+                  : "Вы вошли как Администратор ресепшна. Доступ к финансовым отчетам и ставкам врачей закрыт."}
+              </p>
+              <button
+                type="button"
+                onClick={() => setIsLoginModalOpen(true)}
+                className="px-6 py-3 rounded-2xl bg-[#112E24] dark:bg-[#C5A880] text-[#FAF8F5] dark:text-[#07130F] font-bold text-xs shadow-lg hover:scale-95 transition"
+              >
+                {lang === 'uz' ? "🔑 Rahbar PIN-kodi bilan kirish (PIN: 7777)" : "🔑 Войти по PIN-коду Директора"}
+              </button>
+            </div>
+          ) : (
+            <CeoFinanceTab
+              currentTenant={currentTenant}
+              setIsAddBranchModalOpen={setIsAddBranchModalOpen}
+              lang={lang}
+              visibleBranches={visibleBranches}
+              financeKPIs={financeKPIs}
+              debtsList={debtsList}
+              loadDebtsData={loadDebtsData}
+              setSelectedDebt={setSelectedDebt}
+              setDebtPayAmount={setDebtPayAmount}
+              setIsDebtPayModalOpen={setIsDebtPayModalOpen}
+              tenantDoctors={tenantDoctors}
+              setEditingDoc={setEditingDoc}
+              setDocName={setDocName}
+              setDocSpecUz={setDocSpecUz}
+              setDocPhotoBase64={setDocPhotoBase64}
+              setIsDocModalOpen={setIsDocModalOpen}
+              setDocDept={setDocDept}
+              setDocExp={setDocExp}
+              handleDeleteDoctor={handleDeleteDoctor}
+              promoTitle={promoTitle}
+              setPromoTitle={setPromoTitle}
+              promoDiscount={promoDiscount}
+              setPromoDiscount={setPromoDiscount}
+              isPromoActive={isPromoActive}
+              setIsPromoActive={setIsPromoActive}
+              promoSaveSuccess={promoSaveSuccess}
+              setPromoSaveSuccess={setPromoSaveSuccess}
+            />
+          )
         )}
 
         {activeTab === 'sms_settings' && (
-          <SmsSettingsTab
-            eskizBalance={eskizBalance}
-            eskizToken={eskizToken}
-            setEskizToken={setEskizToken}
-            smsTemplate2h={smsTemplate2h}
-            setSmsTemplate2h={setSmsTemplate2h}
-            smsTemplate1d={smsTemplate1d}
-            setSmsTemplate1d={setSmsTemplate1d}
-            smsTemplateRx={smsTemplateRx}
-            setSmsTemplateRx={setSmsTemplateRx}
-            smsSaveSuccess={smsSaveSuccess}
-            handleSaveSmsSettings={handleSaveSmsSettings}
-            testSmsPhone={testSmsPhone}
-            setTestSmsPhone={setTestSmsPhone}
-            testSmsStatus={testSmsStatus as any}
-            handleSendTestSms={handleSendTestSms}
-          />
+          activeSession?.role === 'reception' ? (
+            <div className="bg-white dark:bg-[#0E231B] p-12 rounded-3xl border-2 border-rose-500/30 text-center space-y-4 max-w-xl mx-auto shadow-2xl animate-fade-in my-12">
+              <div className="w-16 h-16 rounded-3xl bg-rose-500/10 text-rose-500 mx-auto flex items-center justify-center text-3xl font-black">
+                🔒
+              </div>
+              <h3 className="font-serif font-bold text-xl text-[#112E24] dark:text-[#FAF8F5]">
+                {lang === 'uz' ? "SMS Sozlamalari Faqat Rahbar Uchun" : "Настройки SMS только для Руководства"}
+              </h3>
+              <p className="text-xs text-gray-500 leading-relaxed">
+                {lang === 'uz'
+                  ? "SMS xizmati balansi va xabarlar shablonini faqat klinika egasi boshqara oladi."
+                  : "Баланс SMS и шаблоны сообщений может изменять только руководство клиники."}
+              </p>
+              <button
+                type="button"
+                onClick={() => setIsLoginModalOpen(true)}
+                className="px-6 py-3 rounded-2xl bg-[#112E24] dark:bg-[#C5A880] text-[#FAF8F5] dark:text-[#07130F] font-bold text-xs shadow-lg hover:scale-95 transition"
+              >
+                {lang === 'uz' ? "🔑 Rahbar PIN-kodi bilan kirish (PIN: 7777)" : "🔑 Войти по PIN-коду Директора"}
+              </button>
+            </div>
+          ) : (
+            <SmsSettingsTab
+              eskizBalance={eskizBalance}
+              eskizToken={eskizToken}
+              setEskizToken={setEskizToken}
+              smsTemplate2h={smsTemplate2h}
+              setSmsTemplate2h={setSmsTemplate2h}
+              smsTemplate1d={smsTemplate1d}
+              setSmsTemplate1d={setSmsTemplate1d}
+              smsTemplateRx={smsTemplateRx}
+              setSmsTemplateRx={setSmsTemplateRx}
+              smsSaveSuccess={smsSaveSuccess}
+              handleSaveSmsSettings={handleSaveSmsSettings}
+              testSmsPhone={testSmsPhone}
+              setTestSmsPhone={setTestSmsPhone}
+              testSmsStatus={(testSmsStatus as any) || 'idle'}
+              handleSendTestSms={handleSendTestSms}
+            />
+          )
         )}
       </main>
 

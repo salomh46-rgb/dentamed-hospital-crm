@@ -240,7 +240,7 @@ export const PortalHeader: React.FC<PortalHeaderProps> = ({
       <div className="px-6 flex gap-2 border-t border-[#183F32] overflow-x-auto no-scrollbar bg-[#0E271F] py-2">
         <button
           onClick={() => setActiveTab('frontdesk')}
-          className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold tracking-wide transition-all ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold tracking-wide transition-all ${
             activeTab === 'frontdesk'
               ? 'bg-[#C5A880] text-[#112E24] shadow-md scale-100'
               : 'text-[#FAF8F5]/80 hover:bg-[#183F32] hover:text-[#FAF8F5]'
@@ -251,11 +251,14 @@ export const PortalHeader: React.FC<PortalHeaderProps> = ({
           <span className={`text-[10px] px-2 py-0.5 rounded-full ${activeTab === 'frontdesk' ? 'bg-[#112E24] text-[#FAF8F5]' : 'bg-[#183F32] text-[#C5A880]'}`}>
             {branchFilteredAppointments.length}
           </span>
+          <span className="hidden sm:inline-block text-[9px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-mono">
+            Admin
+          </span>
         </button>
 
         <button
           onClick={() => setActiveTab('doctor_suite')}
-          className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold tracking-wide transition-all ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold tracking-wide transition-all ${
             activeTab === 'doctor_suite'
               ? 'bg-[#C5A880] text-[#112E24] shadow-md scale-100'
               : 'text-[#FAF8F5]/80 hover:bg-[#183F32] hover:text-[#FAF8F5]'
@@ -263,30 +266,69 @@ export const PortalHeader: React.FC<PortalHeaderProps> = ({
         >
           <Stethoscope className="w-4 h-4" />
           <span>🩺 {lang === 'uz' ? 'Shifokor Kabineti (Doctor Suite)' : 'Кабинет Врача (Doctor Suite)'}</span>
+          <span className="hidden sm:inline-block text-[9px] bg-sky-500/20 text-sky-300 px-1.5 py-0.5 rounded font-mono">
+            Vrach
+          </span>
         </button>
 
         <button
-          onClick={() => setActiveTab('ceo_finance')}
-          className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold tracking-wide transition-all ${
+          onClick={() => {
+            if (activeSession?.role === 'reception') {
+              setIsLoginModalOpen(true);
+            } else {
+              setActiveTab('ceo_finance');
+            }
+          }}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold tracking-wide transition-all ${
             activeTab === 'ceo_finance'
               ? 'bg-[#C5A880] text-[#112E24] shadow-md scale-100'
+              : activeSession?.role === 'reception'
+              ? 'text-gray-400 opacity-60 hover:opacity-100 hover:bg-rose-900/30'
               : 'text-[#FAF8F5]/80 hover:bg-[#183F32] hover:text-[#FAF8F5]'
           }`}
+          title={activeSession?.role === 'reception' ? "Faqat Klinika Rahbari uchun (PIN kerak)" : undefined}
         >
           <Crown className="w-4 h-4" />
           <span>👑 {lang === 'uz' ? 'Boshqaruv & Kassa (CEO & Finance Hub)' : 'Управление и Касса (CEO Hub)'}</span>
+          {activeSession?.role === 'reception' ? (
+            <span className="text-[9px] bg-rose-500/20 text-rose-300 px-1.5 py-0.5 rounded font-bold flex items-center gap-0.5">
+              <Lock className="w-2.5 h-2.5" /> Faqat Rahbar
+            </span>
+          ) : (
+            <span className="hidden sm:inline-block text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded font-mono">
+              Direktor
+            </span>
+          )}
         </button>
 
         <button
-          onClick={() => setActiveTab('sms_settings')}
-          className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold tracking-wide transition-all ${
+          onClick={() => {
+            if (activeSession?.role === 'reception') {
+              setIsLoginModalOpen(true);
+            } else {
+              setActiveTab('sms_settings');
+            }
+          }}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold tracking-wide transition-all ${
             activeTab === 'sms_settings'
               ? 'bg-[#C5A880] text-[#112E24] shadow-md scale-100'
+              : activeSession?.role === 'reception'
+              ? 'text-gray-400 opacity-60 hover:opacity-100 hover:bg-rose-900/30'
               : 'text-[#FAF8F5]/80 hover:bg-[#183F32] hover:text-[#FAF8F5]'
           }`}
+          title={activeSession?.role === 'reception' ? "Faqat Klinika Rahbari uchun (PIN kerak)" : undefined}
         >
           <MessageSquare className="w-4 h-4" />
           <span>📱 {lang === 'uz' ? 'SMS & Aloqa Sozlamalari' : 'SMS и Связь'}</span>
+          {activeSession?.role === 'reception' ? (
+            <span className="text-[9px] bg-rose-500/20 text-rose-300 px-1.5 py-0.5 rounded font-bold flex items-center gap-0.5">
+              <Lock className="w-2.5 h-2.5" /> Faqat Rahbar
+            </span>
+          ) : (
+            <span className="hidden sm:inline-block text-[9px] bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded font-mono">
+              Direktor
+            </span>
+          )}
         </button>
       </div>
     </header>
