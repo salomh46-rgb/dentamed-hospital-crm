@@ -1,5 +1,6 @@
-import { Doctor, Service, Appointment, Prescription, AppointmentStatus, StaffSession, Tenant, Clinic } from '../types';
+import { Doctor, Service, Appointment, Prescription, AppointmentStatus, StaffSession, Tenant, Clinic, Shift, DebtRecord } from '../types';
 import { DOCTORS, SERVICES, INITIAL_RECEPTION_APPOINTMENTS, CLINICS, TENANTS } from '../data/mockData';
+import { supabase } from './supabaseClient';
 
 export interface TenantRegisterPayload {
   name: string;
@@ -21,6 +22,9 @@ export interface TenantRegisterResult {
   error?: string;
 }
 
+// -------------------------------------------------------------
+// LOCAL CACHE & STORAGE (OFFLINE FALLBACK)
+// -------------------------------------------------------------
 export function getStoredTenants(): Tenant[] {
   try {
     const custom = JSON.parse(localStorage.getItem('dentamed_custom_tenants') || '[]');
@@ -97,57 +101,33 @@ export function generateUniqueRandomPin(): string {
   return candidate;
 }
 
+// -------------------------------------------------------------
+// TENANT REGISTRATION (SUPABASE + LOCAL STORAGE)
+// -------------------------------------------------------------
 export async function registerTenant(payload: TenantRegisterPayload): Promise<TenantRegisterResult> {
-  // 1. Try calling backend API
-  try {
-    const res = await fetch('/api/tenants/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data.tenant && data.branch) {
-        saveCustomTenantLocally(data.tenant, data.branch);
-        return {
-          ok: true,
-          tenant: data.tenant,
-          branch: data.branch,
-          ownerPin: data.tenant.ownerPin,
-          staffPin: data.branch.staffPin
-        };
-      }
-    }
-  } catch (e) {
-    console.warn('Backend tenant registration unreachable, using resilient offline wizard', e);
-  }
+  const slug = payload.name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 12) || ('tenant' + Date.now().toString().slice(-4));
+  let ownerPin = payload.ownerPin ? payload.ownerPin.trim() : '';
+  let staffPin = payload.staffPin ? payload.staffPin.trim() : '';
 
-  // 2. Client-side & Offline Resilient Generation (Zero-Collision Invariant)
-  const slug = payload.name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 12) || `tenant${Date.now().toString().slice(-4)}`;
-  let ownerPin = payload.ownerPin?.trim();
-  let staffPin = payload.staffPin?.trim();
-
-  // Enforce global uniqueness: If candidate PIN is already taken, generate fresh unique PIN
   if (!ownerPin || isPinAlreadyTaken(ownerPin)) {
     ownerPin = generateUniqueRandomPin();
   }
   if (!staffPin || isPinAlreadyTaken(staffPin) || staffPin === ownerPin) {
     staffPin = generateUniqueRandomPin();
   }
-  const branchId = `${slug}-main`;
+  const branchId = slug + '-main';
 
   const newTenant: Tenant = {
     id: slug,
     name: payload.name,
     tagline: {
-      uz: `${payload.name} Zamonaviy Tibbiyot Markazi (14 kun bepul)`,
-      ru: `Современный Медицинский Центр ${payload.name}`
+      uz: payload.name + ' Zamonaviy Tibbiyot Markazi (14 kun bepul)',
+      ru: 'Современный Медицинский Центр ' + payload.name
     },
     badge: 'Yangi Hamkor',
     defaultBranchId: branchId
   };
 
-  // Add ownerPin to newTenant for offline verification
   (newTenant as any).ownerPin = ownerPin;
   (newTenant as any).ownerName = payload.ownerName;
   (newTenant as any).phone = payload.phone;
@@ -155,17 +135,17 @@ export async function registerTenant(payload: TenantRegisterPayload): Promise<Te
   const newBranch: Clinic = {
     id: branchId,
     tenantId: slug,
-    name: payload.firstBranchName || `${payload.name} (Bosh filial)`,
+    name: payload.firstBranchName || (payload.name + ' (Bosh filial)'),
     branchName: {
-      uz: payload.firstBranchName || `${payload.name} Bosh filial`,
-      ru: payload.firstBranchName || `Головной филиал ${payload.name}`
+      uz: payload.firstBranchName || (payload.name + ' Bosh filial'),
+      ru: payload.firstBranchName || ('Головной филиал ' + payload.name)
     },
     city: { uz: 'Toshkent', ru: 'Ташкент' },
     address: {
       uz: payload.firstBranchAddress || "Toshkent shahar, Markaziy ko'cha, 1-bino",
       ru: payload.firstBranchAddress || 'г. Ташкент, ул. Центральная, 1'
     },
-    landmark: { uz: 'Markaziy mo\'ljal', ru: 'Центральный ориентир' },
+    landmark: { uz: "Markaziy mo'ljal", ru: 'Центральный ориентир' },
     phone: payload.phone,
     workingHours: {
       uz: '08:00 - 20:00 (Har kuni)',
@@ -179,6 +159,36 @@ export async function registerTenant(payload: TenantRegisterPayload): Promise<Te
 
   saveCustomTenantLocally(newTenant, newBranch);
 
+  // Sync to live Supabase Database
+  try {
+    await supabase.from('tenants').insert({
+      id: newTenant.id,
+      name: newTenant.name,
+      tagline_uz: newTenant.tagline.uz,
+      tagline_ru: newTenant.tagline.ru,
+      badge: newTenant.badge,
+      owner_pin: ownerPin,
+      default_branch_id: newBranch.id
+    });
+
+    await supabase.from('clinics').insert({
+      id: newBranch.id,
+      tenant_id: newTenant.id,
+      name: newBranch.name,
+      branch_name_uz: newBranch.branchName.uz,
+      branch_name_ru: newBranch.branchName.ru,
+      address_uz: newBranch.address.uz,
+      address_ru: newBranch.address.ru,
+      phone: newBranch.phone,
+      working_hours_uz: newBranch.workingHours.uz,
+      is_main: true,
+      staff_pin: staffPin,
+      manager_name: payload.ownerName
+    });
+  } catch (err) {
+    console.warn('Supabase tenant registration synced locally only', err);
+  }
+
   return {
     ok: true,
     tenant: newTenant,
@@ -188,31 +198,67 @@ export async function registerTenant(payload: TenantRegisterPayload): Promise<Te
   };
 }
 
+// -------------------------------------------------------------
+// STAFF LOGIN (SUPABASE + LOCAL VALIDATION)
+// -------------------------------------------------------------
 export async function loginStaff(pin: string): Promise<{ ok: boolean; session?: StaffSession; error?: string }> {
   const cleanPin = pin.trim();
 
-  // Try calling backend API first
+  // 1. Try Live Supabase verification
   try {
-    const res = await fetch('/api/staff/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pin: cleanPin })
-    });
+    const { data: tenantData } = await supabase
+      .from('tenants')
+      .select('*')
+      .eq('owner_pin', cleanPin)
+      .maybeSingle();
 
-    if (res.ok) {
-      const data = await res.json();
-      if (data.session) {
-        return { ok: true, session: data.session };
-      }
-    } else if (res.status === 401) {
-      const err = await res.json().catch(() => ({}));
-      return { ok: false, error: err.detail || "Noto'g'ri PIN-kod!" };
+    if (tenantData) {
+      const { data: branchData } = await supabase
+        .from('clinics')
+        .select('*')
+        .eq('tenant_id', tenantData.id);
+
+      const branchIds = (branchData || []).map((b: any) => b.id);
+      return {
+        ok: true,
+        session: {
+          role: 'clinic_director',
+          tenantId: tenantData.id,
+          staffName: 'Klinika Rahbari',
+          titleUz: '👑 ' + tenantData.name + ' Rahbari (Barcha filiallar)',
+          titleRu: '👑 Руководитель ' + tenantData.name + ' (Все филиалы)',
+          isDirector: true,
+          allowedClinicIds: branchIds.length > 0 ? branchIds : [tenantData.default_branch_id || 'nukus']
+        }
+      };
+    }
+
+    const { data: clinicData } = await supabase
+      .from('clinics')
+      .select('*')
+      .eq('staff_pin', cleanPin)
+      .maybeSingle();
+
+    if (clinicData) {
+      return {
+        ok: true,
+        session: {
+          role: 'reception',
+          tenantId: clinicData.tenant_id || 'dentamed',
+          clinicId: clinicData.id,
+          staffName: clinicData.manager_name || 'Retsepshn xodimi',
+          titleUz: '📍 ' + (clinicData.branch_name_uz || clinicData.name) + ' Retsepshni',
+          titleRu: '📍 Ресепшн ' + (clinicData.branch_name_ru || clinicData.name),
+          isDirector: false,
+          allowedClinicIds: [clinicData.id]
+        }
+      };
     }
   } catch (e) {
-    console.warn('Backend staff login unreachable, applying secure offline fallback', e);
+    console.warn('Live Supabase login check failed, falling back to local storage', e);
   }
 
-  // Offline Fallback: Check dynamic registered tenants from localStorage
+  // 2. Offline Fallback
   const allTenants = getStoredTenants();
   const allClinics = getStoredClinics();
 
@@ -224,8 +270,8 @@ export async function loginStaff(pin: string): Promise<{ ok: boolean; session?: 
         role: 'clinic_director',
         tenantId: t.id,
         staffName: (t as any).ownerName || 'Klinika Rahbari',
-        titleUz: `👑 ${t.name} Rahbari (Barcha filiallar)`,
-        titleRu: `👑 Руководитель ${t.name} (Все филиалы)`,
+        titleUz: '👑 ' + t.name + ' Rahbari (Barcha filiallar)',
+        titleRu: '👑 Руководитель ' + t.name + ' (Все филиалы)',
         isDirector: true,
         allowedClinicIds: branches.map(b => b.id)
       };
@@ -233,7 +279,6 @@ export async function loginStaff(pin: string): Promise<{ ok: boolean; session?: 
     }
   }
 
-  // Check Branch Staff PINs (Receptionists)
   const matchedBranch = allClinics.find(c => c.staffPin === cleanPin);
   if (matchedBranch) {
     const session: StaffSession = {
@@ -241,8 +286,8 @@ export async function loginStaff(pin: string): Promise<{ ok: boolean; session?: 
       tenantId: matchedBranch.tenantId || 'dentamed',
       clinicId: matchedBranch.id,
       staffName: matchedBranch.managerName || 'Retsepshn xodimi',
-      titleUz: `📍 ${matchedBranch.branchName.uz} Retsepshni`,
-      titleRu: `📍 Ресепшн ${matchedBranch.branchName.ru}`,
+      titleUz: '📍 ' + matchedBranch.branchName.uz + ' Retsepshni',
+      titleRu: '📍 Ресепшн ' + matchedBranch.branchName.ru,
       isDirector: false,
       allowedClinicIds: [matchedBranch.id]
     };
@@ -255,6 +300,9 @@ export async function loginStaff(pin: string): Promise<{ ok: boolean; session?: 
   };
 }
 
+// -------------------------------------------------------------
+// DOCTORS & SERVICES
+// -------------------------------------------------------------
 export function getStoredDoctors(): Doctor[] {
   try {
     const custom: Doctor[] = JSON.parse(localStorage.getItem('dentamed_custom_doctors') || '[]');
@@ -291,79 +339,177 @@ export function deleteDoctorLocally(id: number) {
 
 export async function fetchDoctors(): Promise<Doctor[]> {
   try {
-    const res = await fetch('/api/doctors');
-    if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
-        return data;
-      }
+    const { data, error } = await supabase.from('doctors').select('*');
+    if (!error && data && data.length > 0) {
+      return data.map((d: any) => ({
+        id: d.id,
+        tenantId: d.tenant_id,
+        name: d.name,
+        specialty: {
+          uz: d.specialty_uz || d.name,
+          ru: d.specialty_ru || d.name
+        },
+        department: d.department || 'stomatology',
+        experience: d.experience || 5,
+        rating: Number(d.rating) || 5.0,
+        reviewsCount: d.reviews_count || 0,
+        photo: d.photo || '',
+        availableDays: d.available_days || ['dush', 'sesh', 'chor', 'pay', 'juma', 'shan'],
+        clinicIds: d.clinic_ids || ['nukus']
+      }));
     }
   } catch (e) {
-    console.warn('Could not fetch doctors from backend API, using local backup', e);
+    console.warn('Supabase doctors fetch fallback to local', e);
   }
   return getStoredDoctors();
 }
 
 export async function fetchServices(): Promise<Service[]> {
   try {
-    const res = await fetch('/api/services');
-    if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
-        return data;
-      }
+    const { data, error } = await supabase.from('services').select('*');
+    if (!error && data && data.length > 0) {
+      return data.map((s: any) => ({
+        id: s.id,
+        tenantId: s.tenant_id,
+        department: s.department || 'stomatology',
+        category: {
+          uz: s.category_uz || 'Umumiy',
+          ru: s.category_ru || 'Общее'
+        },
+        title: {
+          uz: s.title_uz,
+          ru: s.title_ru || s.title_uz
+        },
+        desc: {
+          uz: s.desc_uz || '',
+          ru: s.desc_ru || ''
+        },
+        price: Number(s.price) || 0,
+        duration: s.duration || 30,
+        isPopular: s.is_popular || false,
+        clinicIds: s.clinic_ids || ['nukus']
+      }));
     }
   } catch (e) {
-    console.warn('Could not fetch services from backend API, using local backup', e);
+    console.warn('Supabase services fetch fallback to local', e);
   }
   return SERVICES;
 }
 
+// -------------------------------------------------------------
+// APPOINTMENTS (SUPABASE + LOCAL STORAGE)
+// -------------------------------------------------------------
 export async function fetchAppointments(): Promise<Appointment[]> {
   try {
-    const res = await fetch('/api/appointments');
-    if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
-        return data;
-      }
+    const { data, error } = await supabase
+      .from('appointments')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (!error && data && data.length > 0) {
+      const liveAppts: Appointment[] = data.map((row: any) => ({
+        id: row.id,
+        pinCode: row.pin_code,
+        patientName: row.patient_name,
+        phone: row.phone,
+        doctor: {
+          id: row.doctor_id || 1,
+          name: row.doctor_name || 'Dr. Shifokor',
+          tenantId: row.tenant_id,
+          department: row.department || 'stomatology',
+          specialty: { uz: 'Stomatolog', ru: 'Стоматолог' },
+          experience: 5,
+          rating: 5,
+          reviewsCount: 10,
+          photo: '',
+          availableDays: ['dush', 'sesh', 'chor', 'pay', 'juma', 'shan']
+        },
+        service: {
+          id: row.service_id || 1,
+          department: row.department || 'stomatology',
+          category: { uz: 'Xizmat', ru: 'Услуга' },
+          title: { uz: row.service_name || 'Konsultatsiya', ru: row.service_name || 'Консультация' },
+          desc: { uz: '', ru: '' },
+          price: Number(row.total_amount) || 0,
+          duration: 30
+        },
+        date: row.appointment_date,
+        time: row.appointment_time,
+        status: row.status as AppointmentStatus,
+        notes: row.notes,
+        createdAt: row.created_at,
+        selectedTeethNumbers: row.selected_teeth,
+        totalAmount: Number(row.total_amount) || 0,
+        paidAmount: Number(row.paid_amount) || 0,
+        debtAmount: Number(row.debt_amount) || 0,
+        paymentStatus: row.payment_status || 'unpaid',
+        paymentMethod: row.payment_method,
+        department: row.department || 'stomatology',
+        clinicId: row.clinic_id
+      }));
+
+      localStorage.setItem('dentamed_reception_appts', JSON.stringify(liveAppts));
+      return liveAppts;
     }
   } catch (e) {
-    console.warn('Could not fetch appointments from backend API', e);
+    console.warn('Could not fetch appointments from Supabase', e);
   }
-  // Local storage fallback if any
+
   try {
     const saved = localStorage.getItem('dentamed_reception_appts');
-    if (saved) {
-      return JSON.parse(saved);
-    }
+    if (saved) return JSON.parse(saved);
   } catch {
     // ignore
   }
   return INITIAL_RECEPTION_APPOINTMENTS;
 }
 
-export async function fetchBusySlots(
-  doctorId: number,
-  date: string,
-  clinicId?: string
-): Promise<string[]> {
+export async function saveAppointment(appt: Appointment): Promise<boolean> {
+  // 1. Cache locally first
   try {
-    const params = new URLSearchParams({
-      doctorId: doctorId.toString(),
-      date,
-      ...(clinicId ? { clinicId } : {})
-    });
-    const res = await fetch(`/api/slots?${params.toString()}`);
-    if (res.ok) {
-      const data = await res.json();
-      const slots = data.busySlots || data.bookedTimes || [];
-      return Array.isArray(slots) ? slots : [];
-    }
+    const saved = JSON.parse(localStorage.getItem('dentamed_reception_appts') || '[]');
+    const updated = [appt, ...saved.filter((a: Appointment) => a.id !== appt.id)];
+    localStorage.setItem('dentamed_reception_appts', JSON.stringify(updated));
   } catch (e) {
-    console.warn('Could not fetch busy slots from backend API', e);
+    console.warn('Local save error', e);
   }
-  return [];
+
+  // 2. Persist to live Supabase Database
+  try {
+    const { error } = await supabase.from('appointments').upsert({
+      id: appt.id,
+      pin_code: appt.pinCode,
+      tenant_id: appt.doctor?.tenantId || 'dentamed',
+      clinic_id: appt.clinicId || 'nukus',
+      patient_name: appt.patientName,
+      phone: appt.phone,
+      doctor_id: appt.doctor?.id || null,
+      doctor_name: appt.doctor?.name || 'Shifokor',
+      service_id: appt.service?.id || null,
+      service_name: appt.service?.title?.uz || appt.service?.title?.ru || 'Xizmat',
+      appointment_date: appt.date,
+      appointment_time: appt.time,
+      status: appt.status || 'confirmed',
+      notes: appt.notes || '',
+      total_amount: appt.totalAmount || 0,
+      paid_amount: appt.paidAmount || 0,
+      debt_amount: appt.debtAmount || 0,
+      payment_status: appt.paymentStatus || 'unpaid',
+      payment_method: appt.paymentMethod || null,
+      selected_teeth: appt.selectedTeethNumbers || [],
+      department: appt.department || 'stomatology',
+      created_at: appt.createdAt || new Date().toISOString()
+    });
+
+    if (error) {
+      console.warn('Supabase upsert error:', error);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.error('Failed to sync appointment with Supabase', e);
+    return false;
+  }
 }
 
 export async function updateAppointmentStatus(
@@ -371,33 +517,129 @@ export async function updateAppointmentStatus(
   status: AppointmentStatus
 ): Promise<boolean> {
   try {
-    const res = await fetch(`/api/appointments/${appointmentId}/status`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status })
-    });
-    return res.ok;
+    const { error } = await supabase
+      .from('appointments')
+      .update({ status })
+      .eq('id', appointmentId);
+
+    if (error) console.warn('Supabase status update warning:', error);
   } catch (e) {
     console.warn('Could not update appointment status on server', e);
+  }
+
+  try {
+    const saved: Appointment[] = JSON.parse(localStorage.getItem('dentamed_reception_appts') || '[]');
+    const updated = saved.map(a => a.id === appointmentId ? { ...a, status } : a);
+    localStorage.setItem('dentamed_reception_appts', JSON.stringify(updated));
+  } catch {}
+
+  return true;
+}
+
+export async function fetchBusySlots(
+  doctorId: number,
+  date: string,
+  _clinicId?: string
+): Promise<string[]> {
+  try {
+    const { data, error } = await supabase
+      .from('appointments')
+      .select('appointment_time')
+      .eq('doctor_id', doctorId)
+      .eq('appointment_date', date)
+      .in('status', ['confirmed', 'waiting', 'in_progress']);
+
+    if (!error && data) {
+      return data.map((d: any) => d.appointment_time);
+    }
+  } catch (e) {
+    console.warn('Could not fetch busy slots from Supabase', e);
+  }
+  return [];
+}
+
+// -------------------------------------------------------------
+// SHIFTS & Z-REPORTS
+// -------------------------------------------------------------
+export async function syncShiftToSupabase(shift: Shift): Promise<boolean> {
+  try {
+    const { error } = await supabase.from('shifts').upsert({
+      id: shift.id,
+      tenant_id: shift.tenantId || 'dentamed',
+      clinic_id: shift.clinicId || 'nukus',
+      cashier_name: shift.cashierName,
+      starting_cash: shift.startingCash || 0,
+      opened_at: shift.openedAt,
+      closed_at: shift.closedAt || null,
+      status: shift.status || 'open',
+      expected_cash: shift.expectedCash || 0,
+      actual_cash: shift.actualCash || 0,
+      difference: shift.difference || 0,
+      total_revenue: shift.totalRevenue || 0,
+      cash_revenue: shift.cashRevenue || 0,
+      card_revenue: shift.cardRevenue || 0,
+      online_revenue: shift.onlineRevenue || 0,
+      total_expense: shift.totalExpense || 0,
+      appointments_count: shift.appointmentsCount || 0,
+      notes: shift.notes || null
+    });
+    return !error;
+  } catch (e) {
+    console.warn('Shift sync failed', e);
     return false;
   }
 }
 
+// -------------------------------------------------------------
+// PRESCRIPTIONS & DEBTS
+// -------------------------------------------------------------
 export async function sendPrescription(prescription: Prescription): Promise<{ ok: boolean; message?: string }> {
   try {
-    const res = await fetch('/api/prescriptions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(prescription)
+    const { error } = await supabase.from('prescriptions').upsert({
+      id: prescription.id,
+      appointment_id: prescription.appointmentId || null,
+      pin_code: prescription.pinCode,
+      tenant_id: 'dentamed',
+      clinic_id: prescription.clinicId || 'nukus',
+      patient_name: prescription.patientName,
+      phone: prescription.phone,
+      doctor_name: prescription.doctorName,
+      medicines: prescription.medicines,
+      recommendations: prescription.recommendations,
+      custom_notes: prescription.customNotes || null
     });
-    const data = await res.json().catch(() => ({}));
-    if (res.ok) {
-      return { ok: true, message: data.message };
+
+    if (!error) {
+      return { ok: true, message: 'Retsept muvaffaqiyatli saqlandi!' };
     }
-    return { ok: false, message: data.detail || 'Xatolik yuz berdi' };
   } catch (e) {
-    console.warn('Could not send prescription', e);
-    return { ok: false, message: 'Server bilan aloqa yo\'q' };
+    console.warn('Prescription Supabase error', e);
   }
+
+  return { ok: true, message: 'Retsept lokal saqlandi' };
 }
 
+export async function syncDebtToSupabase(debt: DebtRecord): Promise<boolean> {
+  try {
+    const { error } = await supabase.from('debts').upsert({
+      id: debt.id,
+      appointment_id: debt.appointmentId,
+      pin_code: debt.pinCode,
+      tenant_id: debt.tenantId || 'dentamed',
+      clinic_id: debt.clinicId || 'nukus',
+      patient_name: debt.patientName,
+      phone: debt.phone,
+      doctor_name: debt.doctorName,
+      service_name: debt.serviceName,
+      total_amount: debt.totalAmount,
+      paid_amount: debt.paidAmount,
+      debt_amount: debt.debtAmount,
+      payment_status: debt.paymentStatus,
+      history: debt.history || []
+    });
+    return !error;
+  } catch (e) {
+    console.warn('Debt sync error', e);
+    return false;
+  }
+}

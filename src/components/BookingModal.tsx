@@ -3,7 +3,7 @@ import { Language, Doctor, Service, Appointment, ClinicId } from '../types';
 import { DOCTORS, SERVICES, TIME_SLOTS } from '../data/mockData';
 import { X, Calendar, Clock, User, Phone, CheckCircle, ArrowRight, ArrowLeft, Lock } from 'lucide-react';
 import { showTelegramAlert, triggerHaptic } from '../utils/telegramAlerts';
-import { fetchBusySlots } from '../services/api';
+import { fetchBusySlots, saveAppointment } from '../services/api';
 
 interface BookingModalProps {
   lang: Language;
@@ -307,6 +307,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
       }
     }
+
+    // Persist to live Supabase database & local cache
+    await saveAppointment(newAppointment);
 
     onSuccess(newAppointment);
     onClose();
